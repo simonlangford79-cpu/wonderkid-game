@@ -273,6 +273,75 @@ select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;ba
 .spinner{width:18px;height:18px;border:2px solid #1a1a1a;border-top-color:#3db866;border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #errMsg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#080808;color:#d94a4a;font-size:13px;z-index:100}
+
+/* ═══════════════ MOBILE / RESPONSIVE ═══════════════ */
+@media (max-width: 720px){
+  /* App scrolls vertically instead of being locked to one screen height */
+  html,body{overflow-y:auto;-webkit-text-size-adjust:100%}
+  #app{height:auto;min-height:100vh;padding:8px 10px;gap:8px}
+  #main{flex-direction:column;flex:none;min-height:0;gap:10px}
+
+  /* Pitch on top, smaller, full width */
+  #pitchCol{flex:none;width:100%}
+  #pitchWrap{max-width:420px;margin:0 auto;width:100%}
+
+  /* Topbar wraps and shrinks */
+  #topbar{flex-wrap:wrap;gap:6px}
+  .logo{font-size:16px}
+  #topbar .sub{display:none}          /* hide the tagline on phones to save space */
+
+  /* Setup controls stack and wrap */
+  .setup-row{flex-wrap:wrap;gap:10px}
+  .sg{flex:1 1 auto;min-width:130px}
+  select{font-size:15px;padding:8px 10px;width:100%}   /* 15px+ stops iOS zoom-on-focus */
+  .seg-btn{font-size:13px;padding:7px 12px}            /* bigger tap targets */
+
+  /* Line-strength bars: stack to 3-across compact */
+  .lines{flex-direction:row;gap:6px}
+  .lines-draft .lineb{padding:6px}
+  .lineb .lv{font-size:15px}
+
+  /* Draft candidate cards full width, comfortable tap height */
+  .pick{padding:11px}
+  .pick .pot{font-size:26px}
+  #pickList{max-height:none}          /* let the page scroll, not an inner box */
+
+  /* Spin button + reveal sizing */
+  .btn-spin{font-size:16px;padding:13px 20px;width:100%}
+  .spin-year{font-size:30px}
+
+  /* Budget chips wrap */
+  .budget-bar{flex-wrap:wrap;gap:6px}
+
+  /* Buttons big enough to tap */
+  .btn{min-height:42px}
+  .land-btn{width:100%;justify-content:center}
+
+  /* Landing page padding + type scale */
+  .land-inner{padding:30px 18px 44px}
+  .land-title{font-size:36px}
+  .land-hook{font-size:16px}
+  .step{min-width:0;flex:1 1 100%}    /* steps stack one per row */
+  .featc{flex:1 1 100%}
+  .land-play{flex-direction:column;width:100%}
+
+  /* Result screen: roster + table stack, scroll naturally */
+  #resultPanel{flex-direction:column}
+  #resultRoster{max-height:none}
+  table{font-size:12px}
+
+  /* Cookie banner stacks */
+  .cookie-banner{flex-direction:column;gap:10px}
+  .modal{max-height:88vh;padding:20px}
+}
+
+/* Very small phones */
+@media (max-width: 380px){
+  .land-title{font-size:30px}
+  .spin-year{font-size:24px}
+  .pick .pot{font-size:22px}
+}
+
 </style>
 </head>
 <body>
