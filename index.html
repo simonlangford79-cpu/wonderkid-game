@@ -150,6 +150,11 @@ select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;ba
 .rclub{font-size:12px;color:#999;font-weight:500}
 .ryear{font-size:12px;color:#666;min-width:48px;text-align:right}
 .rstat{display:flex;gap:12px;align-items:center;flex-shrink:0;font-size:12px}
+.roster-head{display:flex;align-items:center;justify-content:space-between;padding:4px 8px 6px;border-bottom:1px solid #1a1a1a;margin-bottom:4px}
+.roster-head .rh-name{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#777;font-weight:600}
+.roster-head .rh-stats{display:flex;gap:12px;font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:#777;font-weight:600}
+.roster-head .rh-stats span{min-width:18px;text-align:center}
+.roster-head .rh-stats span:last-child{min-width:38px}
 .rstat .v{font-weight:700;color:#fff}.rstat .k{color:#666;font-size:10px;margin-left:2px}
 .rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .rdot.att{background:#e8565e}.rdot.mid{background:#3dc578}.rdot.def{background:#5290e0}.rdot.gk{background:#f0ad2a}
@@ -583,6 +588,10 @@ select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;ba
           <div class="team-head">
             <div class="team-title">Your XI</div>
             <div class="team-sub" id="teamSub"></div>
+          </div>
+          <div class="roster-head">
+            <span class="rh-name">Player</span>
+            <span class="rh-stats"><span>G</span><span>A</span><span>Rating</span></span>
           </div>
           <div class="roster" id="resultRoster"></div>
         </div>
@@ -1438,15 +1447,22 @@ function showResult(){
 
   const lg=LEAGUES[G.league];
   const n=lg.teams.length;
-  const TIERS=[
-    {min:Math.round(n*2.3),lbl:'Champions',cls:'t5',txt:'Against every prediction, they delivered. The scouts were right all along.'},
-    {min:Math.round(n*1.7),lbl:'UCL qualification',cls:'t4',txt:"Top four. The potential wasn't entirely wrong. Some of them made it."},
-    {min:Math.round(n*1.3),lbl:'Mid-table',cls:'t3',txt:'Survived. Not what the FM database promised, but they did their jobs.'},
-    {min:Math.round(n*0.95),lbl:'Relegation battle',cls:'t2',txt:'Every game felt like a crisis. The gap between potential and reality was brutal.'},
-    {min:0,lbl:'Relegated',cls:'t1',txt:'You built your season around broken dreams. The save file corrupted. It always does.'}
-  ];
-  const tier=TIERS.find(t=>pts>=t.min)||TIERS[TIERS.length-1];
-  document.getElementById('tierBadge').textContent=G.sm==='wk'?tier.lbl+' (what if)':tier.lbl;
+  // Determine the team's ACTUAL finishing position from the sorted final table,
+  // so the verdict always matches the league table (no more "Champions" at 7th).
+  const _sorted=[...G._table].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
+  const finishPos=_sorted.findIndex(t=>t.isUs)+1;  // 1-based; 0 if not found
+  const uclCut=lg.ucl||4, uelCut=lg.uel||6, relCut=lg.rel||(n-2);
+  let tier;
+  if(finishPos===1) tier={lbl:'Champions',cls:'t5',txt:'Against every prediction, they delivered. The scouts were right all along.'};
+  else if(finishPos<=uclCut) tier={lbl:'UCL qualification',cls:'t4',txt:"Top of the pile. The potential wasn't entirely wrong — some of them made it."};
+  else if(finishPos<=uelCut) tier={lbl:'European places',cls:'t4',txt:'A European finish. Better than anyone dared predict for this lot.'};
+  else if(finishPos<relCut) tier={lbl:'Mid-table',cls:'t3',txt:'Survived. Not what the FM database promised, but they did their jobs.'};
+  else if(finishPos<=n-1) tier={lbl:'Relegation battle',cls:'t2',txt:'Every game felt like a crisis. The gap between potential and reality was brutal.'};
+  else tier={lbl:'Relegated',cls:'t1',txt:'You built your season around broken dreams. The save file corrupted. It always does.'};
+  tier.pos=finishPos;
+  const ord=(p)=>{const s=['th','st','nd','rd'],v=p%100;return p+(s[(v-20)%10]||s[v]||s[0]);};
+  const posLabel=tier.pos>0?ord(tier.pos)+' · ':'';
+  document.getElementById('tierBadge').textContent=posLabel+(G.sm==='wk'?tier.lbl+' (what if)':tier.lbl);
   document.getElementById('tierBadge').className='tbadge '+tier.cls;
   document.getElementById('flavourTxt').textContent=G.sm==='wk'?'In the parallel universe where they all delivered…':tier.txt;
 
