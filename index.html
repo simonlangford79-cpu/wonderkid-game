@@ -1,0 +1,1647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What Could Have Been</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#080808;color:#f0f0f0}
+#app{display:flex;flex-direction:column;height:100vh;padding:10px 14px;gap:8px}
+#topbar{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.logo{font-size:18px;font-weight:700;letter-spacing:-0.4px;color:#fff}
+.sub{font-size:12px;color:#aaa}
+#main{display:flex;gap:10px;flex:1;min-height:0}
+#pitchCol{flex:0 0 340px;display:flex;flex-direction:column}
+#panelCol{flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;overflow-y:auto;padding-right:2px}
+#panelCol::-webkit-scrollbar{width:3px}
+#panelCol::-webkit-scrollbar-thumb{background:#222;border-radius:2px}
+
+/* PITCH */
+.pitch-wrap{position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden}
+.pitch-svg{position:absolute;inset:0;width:100%;height:100%}
+.pslot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;z-index:2}
+.pslot.clickable{cursor:pointer}
+.pslot.clickable:hover .pdot{transform:scale(1.18);border-color:rgba(255,255,255,.8)}
+.pslot.selected .pdot{border-color:#fff!important;animation:pulse 1s infinite;transform:scale(1.1)}
+.pdot{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:rgba(0,0,0,.5);transition:all .18s;letter-spacing:.3px}
+.pdot.empty{border-style:dashed;font-size:9px;font-weight:600;color:rgba(255,255,255,.5);background:rgba(0,0,0,.35)}
+/* Role-based colours (38-0 style) */
+.pdot.att{background:#c8323a;border-color:#e8565e}
+.pdot.mid{background:#1f9d57;border-color:#3dc578}
+.pdot.def{background:#2f6fc0;border-color:#5290e0}
+.pdot.gk{background:#d99000;border-color:#f0ad2a}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.5)}50%{box-shadow:0 0 0 6px rgba(255,255,255,0)}}
+.pname{font-size:9.5px;color:#fff;text-align:center;max-width:54px;line-height:1.15;text-shadow:0 1px 4px #000,0 0 6px #000;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.pnum{font-size:9px;font-weight:800;text-shadow:0 1px 4px #000;background:rgba(0,0,0,.5);padding:0 4px;border-radius:4px;margin-top:1px}
+.pnum.g{color:#5dd48a}.pnum.o{color:#f0ad2a}.pnum.b{color:#f07a7a}
+
+/* CARDS */
+.card{background:#111;border:1px solid #1e1e1e;border-radius:9px;padding:9px 11px;flex-shrink:0}
+.lbl{font-size:11px;color:#cfcfcf;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.seg{display:flex;background:#0d0d0d;border-radius:7px;padding:3px;gap:2px;border:1px solid #2a2a2a}
+.seg-btn{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;border:none;cursor:pointer;background:transparent;color:#9a9a9a;transition:all .12s}
+.seg-btn.on{background:#2a2a2a;color:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;background:#161616;color:#fff;cursor:pointer}
+.btn{background:#181818;border:1px solid #2a2a2a;border-radius:7px;padding:5px 11px;font-size:11px;font-weight:500;color:#ddd;cursor:pointer;transition:all .12s;white-space:nowrap}
+.btn:hover:not(:disabled){background:#1a1a1a}
+.btn:disabled{opacity:.3;cursor:default}
+.btn-go{background:#0e4a25;border-color:#1a6a38;color:#5dd48a}
+.btn-go:hover:not(:disabled){background:#135530}
+.btn-spin{background:linear-gradient(135deg,#e8a000,#c87a00);border-color:#f0ad2a;color:#1a1200;font-weight:800;font-size:15px;padding:11px 22px;box-shadow:0 2px 10px rgba(232,160,0,.3)}
+.btn-spin:hover:not(:disabled){background:linear-gradient(135deg,#f0ad2a,#e8a000);transform:translateY(-1px)}
+.btn-spin:disabled{background:#2a1a00;border-color:#3a2800;color:#6a5020;box-shadow:none}
+.hidden{display:none!important}
+
+/* SETUP */
+.setup-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.sg{display:flex;flex-direction:column;gap:3px}
+
+/* DRAFT */
+.pbar{height:2px;background:#181818;border-radius:1px;margin:3px 0 6px;overflow:hidden}
+.pfill{height:100%;background:#1a6a38;border-radius:1px;transition:width .3s}
+.spin-year{font-size:28px;font-weight:700;color:#fff;letter-spacing:-1px;line-height:1}
+.spin-sub{font-size:11px;color:#999;margin-top:2px;margin-bottom:6px;min-height:14px}
+
+/* PICKS */
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:5px 0}
+.pick{display:flex;align-items:flex-start;gap:6px;padding:6px 8px;background:#0a0a0a;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:all .1s}
+.pick:hover{border-color:#222}
+.pick.sel{border-color:#1a6a38;background:#0a1a0f}
+.pick-num{font-size:22px;font-weight:700;min-width:28px;text-align:center;line-height:1;flex-shrink:0;padding-top:1px}
+.pick-num.pot{color:#3db866}.pick-num.real{color:#4a90d9}.pick-num.wk{color:#e8a000}
+.pbody{flex:1;min-width:0}
+.pn{font-size:13px;font-weight:600;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm{font-size:11px;color:#aaa;margin-top:2px}
+.ph{font-size:11px;color:#bbb;margin-top:2px;font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ptag{font-size:8px;background:#181818;color:#444;padding:1px 4px;border-radius:3px;margin-left:2px;vertical-align:1px}
+
+/* REVEAL */
+.reveal{padding:8px 10px;border-radius:7px;border:1px solid #1e1e1e;background:#0a0a0a;margin-top:5px}
+.rev-row{display:flex;gap:10px;margin-bottom:3px;align-items:flex-end}
+.rev-real{font-size:26px;font-weight:700;line-height:1}
+.rev-real.g{color:#3db866}.rev-real.o{color:#e8a000}.rev-real.b{color:#d94a4a}
+.rev-gap{font-size:11px;font-weight:600}
+.rev-gap.g{color:#3db866}.rev-gap.o{color:#e8a000}.rev-gap.b{color:#d94a4a}
+.rev-lbl{font-size:10px;color:#999}
+.rev-fate{font-size:12px;color:#ccc;font-style:italic;line-height:1.5;margin-top:2px}
+.actions{display:flex;gap:5px;margin-top:6px}
+
+/* SEASON */
+.sdots{display:flex;gap:2px;flex-wrap:wrap;margin:3px 0}
+.sd{width:9px;height:9px;border-radius:2px;transition:background .1s}
+.sd.w{background:#0d4020}.sd.d{background:#4a2d00}.sd.l{background:#4a1010}.sd.p{background:#181818}
+.ml{display:flex;flex-direction:column;gap:2px;max-height:170px;overflow-y:auto}
+.ml::-webkit-scrollbar{width:2px}
+.ml::-webkit-scrollbar-thumb{background:#222}
+.mr{display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:4px;font-size:12px}
+.mr.w{background:#0a1a0a}.mr.d{background:#1a1200}.mr.l{background:#1a0808}
+.mopp{flex:1;color:#ccc}
+.msc{font-weight:700;min-width:26px;text-align:center}
+.msc.w{color:#3db866}.msc.d{color:#e8a000}.msc.l{color:#d94a4a}
+.mbadge{font-size:8px;font-weight:700}
+.mbadge.w{color:#3db866}.mbadge.d{color:#e8a000}.mbadge.l{color:#d94a4a}
+.lrec{font-size:12px;color:#bbb;margin:2px 0 3px}
+
+/* TABLES */
+.stats-table,.league-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+.stats-table th,.league-table th{text-align:left;color:#999;padding:3px 5px;border-bottom:1px solid #2a2a2a;font-weight:500;font-size:11px}
+.stats-table th.r,.league-table th.r{text-align:right}
+.stats-table td,.league-table td{padding:3px 5px;color:#ccc;border-bottom:1px solid #1a1a1a;font-size:12px}
+.stats-table td.r,.league-table td.r{text-align:right}
+.stats-table tr:last-child td,.league-table tr:last-child td{border-bottom:none}
+.top-stat{color:#3db866!important;font-weight:700}
+.league-table tr.us td{color:#fff;background:#0a1a0f}
+.league-table tr.us td.r{color:#3db866}
+.ucl{border-left:2px solid #4a90d9}.uel{border-left:2px solid #e8a000}.rel{border-left:2px solid #d94a4a}
+
+/* RESULT */
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:5px 0}
+.sbox{background:#0a0a0a;border-radius:6px;padding:.4rem;text-align:center}
+.sval{font-size:19px;font-weight:700;color:#fff}
+.slbl{font-size:10px;color:#aaa;margin-top:2px}
+.tbadge{display:inline-block;padding:2px 10px;border-radius:5px;font-size:11px;font-weight:600;margin:3px 0}
+.t5{background:#0a2515;color:#3db866}.t4{background:#0a1525;color:#4a90d9}
+.t3{background:#150a25;color:#9a70d9}.t2{background:#251500;color:#e8a000}.t1{background:#250a0a;color:#d94a4a}
+.bigrec{font-size:36px;font-weight:700;line-height:1;color:#fff}
+.flavour{font-size:12px;color:#bbb;line-height:1.55;margin:3px 0 5px}
+.sharebox{background:#0a0a0a;border-radius:6px;padding:5px 8px;font-size:10px;color:#888;font-family:monospace;line-height:1.6;word-break:break-word;margin-top:4px}
+
+/* POS GRID */
+.pos-grid{display:flex;flex-wrap:wrap;gap:3px;margin:5px 0}
+.pos-btn{padding:4px 10px;border-radius:5px;font-size:12px;font-weight:500;border:1px solid #1e1e1e;background:#0a0a0a;color:#555;cursor:pointer;transition:all .1s}
+.pos-btn:hover{background:#141414;color:#ddd}
+.pos-btn.done{opacity:.3;cursor:default;text-decoration:line-through}
+.pos-btn.active{background:#0e4a25;border-color:#1a6a38;color:#5dd48a}
+
+
+/* ROSTER LIST (38-0 style clarity) */
+.roster{display:flex;flex-direction:column;gap:5px}
+.rrow{display:flex;align-items:center;gap:11px;padding:9px 12px;background:#101010;border:1px solid #1c1c1c;border-radius:9px;transition:background .1s}
+.rrow:hover{background:#161616}
+.rpill{flex-shrink:0;width:42px;text-align:center;font-size:10px;font-weight:700;padding:4px 0;border-radius:6px;letter-spacing:.3px}
+.rpill.att{background:#3a1416;color:#f07a7a}
+.rpill.mid{background:#0e3320;color:#5dd48a}
+.rpill.def{background:#13243f;color:#7ab0ec}
+.rpill.gk{background:#3a2a00;color:#f0ad2a}
+.rname{font-size:15px;font-weight:600;color:#fff;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rmeta{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.rclub{font-size:12px;color:#999;font-weight:500}
+.ryear{font-size:12px;color:#666;min-width:48px;text-align:right}
+.rstat{display:flex;gap:12px;align-items:center;flex-shrink:0;font-size:12px}
+.rstat .v{font-weight:700;color:#fff}.rstat .k{color:#666;font-size:10px;margin-left:2px}
+.rdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rdot.att{background:#e8565e}.rdot.mid{background:#3dc578}.rdot.def{background:#5290e0}.rdot.gk{background:#f0ad2a}
+.rgap{font-size:11px;font-weight:700;min-width:42px;text-align:right}
+.rgap.g{color:#5dd48a}.rgap.o{color:#f0ad2a}.rgap.b{color:#f07a7a}
+.team-head{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.team-title{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.4px}
+.team-sub{font-size:13px;color:#888}
+
+
+/* BUDGET TRACKER (scarcity mechanic) */
+.budget-bar{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.budget-lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.bchip{display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:7px;font-size:12px;font-weight:600;border:1px solid}
+.bchip .bdot{width:9px;height:9px;border-radius:50%}
+.bchip.gold{background:#2a2000;border-color:#5a4500;color:#f0c020}
+.bchip.gold .bdot{background:#f0c020}
+.bchip.silver{background:#1e1e22;border-color:#3a3a42;color:#c8c8d0}
+.bchip.silver .bdot{background:#c8c8d0}
+.bchip.bronze{background:#241608;border-color:#4a3015;color:#cd8a4a}
+.bchip.bronze .bdot{background:#cd8a4a}
+.bchip.spent{opacity:.32;text-decoration:line-through}
+/* tier badge on pick cards */
+.tbadge2{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;letter-spacing:.4px;flex-shrink:0}
+.tbadge2.gold{background:#5a4500;color:#f0c020}
+.tbadge2.silver{background:#3a3a42;color:#e0e0e8}
+.tbadge2.bronze{background:#4a3015;color:#cd8a4a}
+.tbadge2.legend{background:#5a4500;color:#f0c020;box-shadow:0 0 8px rgba(240,192,32,.4)}
+.pick.islegend{border-color:#5a4500;background:linear-gradient(135deg,#1a1400,#0a0a0a)}
+.pick.islegend:hover{border-color:#f0c020}
+.pick.locked{opacity:.4;cursor:not-allowed}
+.pick.locked:hover{border-color:transparent}
+.lockmsg{font-size:9px;color:#d94a4a;margin-top:2px;font-weight:600}
+/* roster tier dot */
+.rtier{font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;flex-shrink:0}
+.rtier.gold{background:#5a4500;color:#f0c020}
+.rtier.silver{background:#3a3a42;color:#e0e0e8}
+.rtier.bronze{background:#4a3015;color:#cd8a4a}
+.rtier.legend{background:#5a4500;color:#f0c020}
+
+
+
+#landing{position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at 50% 0%,#0f2818 0%,#080808 55%);overflow-y:auto;display:flex;flex-direction:column;align-items:center}
+#landing.hidden{display:none}
+.land-inner{max-width:760px;width:100%;padding:48px 28px 60px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.land-kicker{font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#3db866;margin-bottom:14px}
+.land-title{font-size:52px;font-weight:800;letter-spacing:-1.5px;color:#fff;line-height:1.02;margin-bottom:16px}
+.land-hook{font-size:18px;color:#cfcfcf;line-height:1.5;max-width:560px;margin-bottom:8px}
+.land-hook b{color:#fff;font-weight:600}
+.land-play{display:flex;gap:14px;margin:34px 0 8px;flex-wrap:wrap;justify-content:center}
+.land-btn{padding:15px 30px;border-radius:11px;font-size:16px;font-weight:700;cursor:pointer;border:1px solid;transition:transform .1s,background .15s}
+.land-btn:hover{transform:translateY(-2px)}
+.land-btn.daily{background:#e8a000;border-color:#e8a000;color:#1a1200}
+.land-btn.daily:hover{background:#f0ad2a}
+.land-btn.free{background:#0e4a25;border-color:#1a7a4a;color:#5dd48a}
+.land-btn.free:hover{background:#135530}
+.land-note{font-size:12px;color:#666;margin-top:6px}
+.steps{display:flex;gap:14px;margin:44px 0 10px;width:100%;flex-wrap:wrap;justify-content:center}
+.step{flex:1;min-width:150px;background:#0e0e0e;border:1px solid #1c1c1c;border-radius:13px;padding:20px 16px;text-align:left}
+.step-n{width:28px;height:28px;border-radius:50%;background:#1a1a1a;color:#3db866;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:11px}
+.step-h{font-size:15px;font-weight:700;color:#fff;margin-bottom:5px}
+.step-p{font-size:13px;color:#999;line-height:1.5}
+.feat{display:flex;gap:14px;margin-top:18px;width:100%;flex-wrap:wrap}
+.featc{flex:1;min-width:220px;background:linear-gradient(135deg,#0e1410,#0a0a0a);border:1px solid #1c1c1c;border-radius:13px;padding:18px;text-align:left}
+.featc.gold{border-color:#3a2c00;background:linear-gradient(135deg,#161002,#0a0a0a)}
+.feat-h{font-size:15px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+.feat-h .ic{font-size:18px}
+.featc .feat-h{color:#fff}.featc.gold .feat-h{color:#f0c020}
+.feat-p{font-size:13px;color:#9a9a9a;line-height:1.55}
+.land-sec-title{font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#555;margin:40px 0 4px}
+.land-foot{font-size:12px;color:#888;margin-top:40px;line-height:1.6}
+.tier-demo{display:inline-flex;gap:5px;align-items:center;margin:0 2px}
+.tier-demo span{font-size:11px;font-weight:700;padding:2px 7px;border-radius:5px}
+.td-g{background:#5a4500;color:#f0c020}.td-s{background:#3a3a42;color:#e0e0e8}.td-b{background:#4a3015;color:#cd8a4a}
+
+
+/* LEGAL MODALS + COOKIE BANNER + COFFEE */
+.land-links{display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:18px;font-size:12px}
+.land-links a{color:#888;cursor:pointer;text-decoration:none}
+.land-links a:hover{color:#ccc;text-decoration:underline}
+.land-links .sep{color:#333}
+.coffee-btn{display:inline-flex;align-items:center;gap:8px;background:#ffdd00;color:#222;font-weight:700;font-size:14px;padding:10px 18px;border-radius:9px;text-decoration:none;border:none;cursor:pointer;margin-top:22px;transition:transform .1s}
+.coffee-btn:hover{transform:translateY(-2px)}
+.modal-bg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:20px}
+.modal-bg.hidden{display:none}
+.modal{background:#0e0e0e;border:1px solid #242424;border-radius:14px;max-width:580px;width:100%;max-height:82vh;overflow-y:auto;padding:26px 28px}
+.modal h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.modal .msub{font-size:12px;color:#666;margin-bottom:16px}
+.modal p{font-size:13px;color:#bbb;line-height:1.65;margin-bottom:11px}
+.modal h3{font-size:13px;font-weight:700;color:#fff;margin:16px 0 5px}
+.modal a{color:#5dd48a}
+.modal-close{float:right;background:#1a1a1a;border:1px solid #2a2a2a;color:#aaa;width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:15px;line-height:1}
+.modal-close:hover{background:#252525;color:#fff}
+.cookie-banner{position:fixed;left:0;right:0;bottom:0;z-index:250;background:#111;border-top:1px solid #2a2a2a;padding:14px 18px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.cookie-banner.hidden{display:none}
+.cookie-banner .ct{font-size:12.5px;color:#bbb;line-height:1.5;max-width:560px}
+.cookie-banner .ct a{color:#5dd48a;cursor:pointer}
+.cookie-btns{display:flex;gap:8px}
+.cookie-btns button{padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid}
+.ck-accept{background:#0e4a25;border-color:#1a7a4a;color:#5dd48a}
+.ck-accept:hover{background:#135530}
+.ck-decline{background:#161616;border-color:#2a2a2a;color:#aaa}
+.ck-decline:hover{background:#222}
+
+/* LINE STRENGTH BARS */
+.lines{display:flex;gap:8px;margin:8px 0}
+.lines-draft{margin:6px 0 8px}
+.lines-draft .lineb{padding:5px 8px}
+.lines-draft .lineb .lv{font-size:16px}
+.lineb{flex:1;background:#0a0a0a;border:1px solid #1c1c1c;border-radius:8px;padding:7px 9px}
+.lineb .lk{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.4px}
+.lineb .lv{font-size:20px;font-weight:700;margin-top:2px}
+.lineb .lbar{height:4px;background:#1a1a1a;border-radius:2px;margin-top:5px;overflow:hidden}
+.lineb .lfill{height:100%;border-radius:2px}
+.lineb.att .lv{color:#f07a7a}.lineb.att .lfill{background:#c8323a}
+.lineb.mid .lv{color:#5dd48a}.lineb.mid .lfill{background:#1f9d57}
+.lineb.def .lv{color:#7ab0ec}.lineb.def .lfill{background:#2f6fc0}
+
+/* LOADING */
+#loadingMsg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#080808;color:#333;font-size:13px;flex-direction:column;gap:8px;z-index:100}
+.spinner{width:18px;height:18px;border:2px solid #1a1a1a;border-top-color:#3db866;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#errMsg{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#080808;color:#d94a4a;font-size:13px;z-index:100}
+</style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landing">
+  <div class="land-inner">
+    <div class="land-kicker">A Football Manager wonderkid game</div>
+    <div class="land-title">What Could Have Been</div>
+    <div class="land-hook">Every Football Manager save had them — the teenage <b>wonderkids</b> with sky-high potential who were going to take over the world.</div>
+    <div class="land-hook" style="margin-top:10px">Most of them <b>never made it.</b> Draft an XI of them, see the glittering potential, then face the brutal reality of how their careers actually turned out — and play a full season to find out what could have been.</div>
+
+    <div class="land-play">
+      <button class="land-btn daily" onclick="enterGame('daily')">★ Play Daily Challenge</button>
+      <button class="land-btn free" onclick="enterGame('free')">Free Play →</button>
+    </div>
+    <div class="land-note">Daily Challenge: the same draft pool for everyone, every day. Free Play: your rules, any time.</div>
+
+    <div class="land-sec-title">How it works</div>
+    <div class="steps">
+      <div class="step"><div class="step-n">1</div><div class="step-h">Draft your XI</div><div class="step-p">Spin an FM year for each position and pick from that era's wonderkids. See their potential rating — the promise.</div></div>
+      <div class="step"><div class="step-n">2</div><div class="step-h">Face the reality</div><div class="step-p">The moment you draft a player, their real career rating is revealed. Some delivered. Most didn't.</div></div>
+      <div class="step"><div class="step-n">3</div><div class="step-h">Play the season</div><div class="step-p">Your XI plays a full season in a real European league. Your attack, midfield and defence all matter.</div></div>
+      <div class="step"><div class="step-n">4</div><div class="step-h">Beat the gap</div><div class="step-p">Your overdelivery score is how far your team beat what its real talent predicted. Top the leaderboard.</div></div>
+    </div>
+
+    <div class="land-sec-title">What makes it different</div>
+    <div class="feat">
+      <div class="featc gold">
+        <div class="feat-h"><span class="ic">★</span> Legends</div>
+        <div class="feat-p">Spin and you might land on the Legends pool — the immortal CM/FM cult heroes. Tsigalko, Cherno Samba, To Madeira, Freddy Adu. They're a free pick that doesn't cost you any budget. A proper "yes!" moment.</div>
+      </div>
+      <div class="featc">
+        <div class="feat-h"><span class="ic">⚖️</span> Squad budget</div>
+        <div class="feat-p">You can't pick eleven superstars. Your XI is capped: <span class="tier-demo"><span class="td-g">4 Gold</span><span class="td-s">4 Silver</span><span class="td-b">3 Bronze</span></span> Spend your gold wisely — a stacked attack means a budget defence.</div>
+      </div>
+    </div>
+
+    <div class="land-play" style="margin-top:34px">
+      <button class="land-btn daily" onclick="enterGame('daily')">★ Play Daily Challenge</button>
+      <button class="land-btn free" onclick="enterGame('free')">Free Play →</button>
+    </div>
+
+    <a class="coffee-btn" href="https://www.buymeacoffee.com/YOURUSERNAME" target="_blank" rel="noopener">☕ Buy me a coffee</a>
+
+    <div class="land-links">
+      <a onclick="openModal('mDisclaimer')">Disclaimer</a><span class="sep">·</span>
+      <a onclick="openModal('mPrivacy')">Privacy</a><span class="sep">·</span>
+      <a onclick="openModal('mTerms')">Terms</a><span class="sep">·</span>
+      <a onclick="openCookieSettings()">Cookie settings</a>
+    </div>
+
+    <div class="land-foot">An independent, fan-made tribute to the wonderkid era of Championship Manager &amp; Football Manager.<br>Not affiliated with Sports Interactive, SEGA, or any club, league or ratings provider.<br>The potential was real. The reality, less so.</div>
+  </div>
+</div>
+<div id="loadingMsg"><div class="spinner"></div><span>Loading wonderkid database…</span></div>
+<div id="errMsg" class="hidden">Could not load players.json — make sure it's in the same folder.</div>
+
+<div id="app" class="hidden">
+  <div id="topbar">
+    <div class="logo">What Could Have Been</div>
+    <div class="sub">Draft a wonderkid XI · face the reality · play the season</div>
+    <div style="margin-left:auto;display:flex;gap:6px;align-items:center">
+      <div class="seg" id="numsToggle" style="display:none">
+        <button class="seg-btn on" id="tn-on" onclick="setNums(true)">Numbers</button>
+        <button class="seg-btn" id="tn-off" onclick="setNums(false)">Hide</button>
+      </div>
+      <button class="btn" onclick="fullResetToLanding()" style="font-size:11px">↺ Home</button>
+    </div>
+  </div>
+
+  <div id="dailyBanner" class="hidden" style="background:#2a1f00;border:1px solid #5a4500;border-radius:8px;padding:6px 11px;font-size:11px;color:#e8a000;flex-shrink:0" id="dailyBanner"><span id="dailyBannerTxt"></span></div>
+  <div id="main">
+    <!-- PITCH -->
+    <div id="pitchCol">
+      <div class="pitch-wrap" id="pitchWrap">
+        <svg class="pitch-svg" viewBox="0 0 100 152" preserveAspectRatio="none">
+          <rect width="100" height="152" fill="#163d08"/>
+          <rect x="0" y="0" width="100" height="19" fill="rgba(255,255,255,.02)"/>
+          <rect x="0" y="38" width="100" height="19" fill="rgba(255,255,255,.02)"/>
+          <rect x="0" y="76" width="100" height="19" fill="rgba(255,255,255,.02)"/>
+          <rect x="0" y="114" width="100" height="19" fill="rgba(255,255,255,.02)"/>
+          <rect x="7" y="5" width="86" height="142" fill="none" stroke="rgba(255,255,255,.13)" stroke-width=".7"/>
+          <line x1="7" y1="76" x2="93" y2="76" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+          <circle cx="50" cy="76" r="13" fill="none" stroke="rgba(255,255,255,.08)" stroke-width=".5"/>
+          <circle cx="50" cy="76" r=".9" fill="rgba(255,255,255,.18)"/>
+          <rect x="26" y="5" width="48" height="18" fill="none" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+          <rect x="36" y="5" width="28" height="7" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <circle cx="50" cy="19" r=".9" fill="rgba(255,255,255,.15)"/>
+          <path d="M26,22 A10,10 0 0 1 74,22" fill="none" stroke="rgba(255,255,255,.06)" stroke-width=".5"/>
+          <rect x="26" y="129" width="48" height="18" fill="none" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+          <rect x="36" y="140" width="28" height="7" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <circle cx="50" cy="133" r=".9" fill="rgba(255,255,255,.15)"/>
+          <path d="M26,130 A10,10 0 0 0 74,130" fill="none" stroke="rgba(255,255,255,.06)" stroke-width=".5"/>
+          <path d="M7,5 a3,3 0 0 1 3,3" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <path d="M93,5 a3,3 0 0 0-3,3" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <path d="M7,147 a3,3 0 0 0 3,-3" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <path d="M93,147 a3,3 0 0 1-3,-3" fill="none" stroke="rgba(255,255,255,.07)" stroke-width=".5"/>
+          <rect x="41" y="2.5" width="18" height="2.5" fill="none" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+          <rect x="41" y="147" width="18" height="2.5" fill="none" stroke="rgba(255,255,255,.1)" stroke-width=".5"/>
+        </svg>
+        <div id="pitchSlots"></div>
+      </div>
+    </div>
+
+    <!-- PANEL -->
+    <div id="panelCol">
+
+      <!-- SETUP -->
+      <div id="setupPanel">
+        <div class="card">
+          <div class="setup-row">
+            <div class="sg"><div class="lbl">Formation</div><select id="fmPick" onchange="setFm()"><option value="433">4-3-3</option><option value="442">4-4-2</option><option value="4231" selected>4-2-3-1</option><option value="352">3-5-2</option><option value="532">5-3-2</option><option value="451">4-5-1</option></select></div>
+            <div class="sg"><div class="lbl">League</div><select id="leaguePick"><option value="pl">Premier League</option><option value="ll">La Liga</option><option value="bl">Bundesliga</option><option value="sa">Serie A</option><option value="l1">Ligue 1</option></select></div>
+            <div class="sg"><div class="lbl">Mode</div><div class="seg"><button class="seg-btn on" id="gm-wk" onclick="setGM('wk')">Wonderkid</button><button class="seg-btn" id="gm-real" onclick="setGM('real')">Real</button></div></div>
+            <div class="sg"><div class="lbl">Season</div><div class="seg"><button class="seg-btn on" id="sm-real" onclick="setSM('real')">Reality</button><button class="seg-btn" id="sm-wk" onclick="setSM('wk')">What if</button></div></div>
+            <div class="sg"><div class="lbl">Ratings</div><div class="seg"><button class="seg-btn on" id="rv-show" onclick="setRatingsVisible(true)">Show</button><button class="seg-btn" id="rv-hide" onclick="setRatingsVisible(false)">Aficionado</button></div></div>
+            <div class="sg"><div class="lbl">Respins</div><div class="seg"><button class="seg-btn" id="rs-1" onclick="setRespins(1)">1</button><button class="seg-btn" id="rs-2" onclick="setRespins(2)">2</button><button class="seg-btn on" id="rs-3" onclick="setRespins(3)">3</button></div></div>
+            <button class="btn btn-go" onclick="startDraft(false)" style="align-self:flex-end">Free play →</button>
+            <button class="btn" onclick="startDaily()" style="align-self:flex-end;background:#2a1f00;border-color:#5a4500;color:#e8a000">★ Daily Challenge</button>
+          </div>
+          <div id="mode-desc" style="font-size:12.5px;color:#c8c8c8;margin-top:9px;line-height:1.55"></div>
+        </div>
+      </div>
+
+      <!-- SPIN DRAFT -->
+      <div id="spinPanel" class="hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">
+            <div style="font-size:11px;color:#555" id="roundLbl">0 of 11 filled</div>
+            <div style="font-size:11px;color:#999" id="spinInstr">Click a position on the pitch</div>
+          </div>
+          <div class="pbar"><div class="pfill" id="progFill" style="width:0%"></div></div>
+          <div class="budget-bar" id="budgetBarSpin"></div>
+          <div class="lines lines-draft" id="lineBarsSpin"></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="flex:1">
+              <div class="spin-year" id="spinYear">–</div>
+              <div class="spin-sub" id="spinSub">select a position first</div>
+            </div>
+            <button class="btn btn-spin" id="spinBtn" onclick="doSpin()" disabled>🎰 Spin year</button>
+          </div>
+          <div id="picksWrap" class="hidden">
+            <div class="picks" id="pickList"></div>
+            <div id="revealSection" class="hidden">
+              <div class="reveal" id="revealBox"></div>
+              <div class="actions"><button class="btn btn-go" onclick="nextRound()">Next pick →</button></div>
+            </div>
+            <div id="preDraftBtns">
+              <div class="actions">
+                <button class="btn btn-go" id="draftBtn" onclick="doDraft()" disabled>Draft player</button>
+                <button class="btn respin-btn" onclick="reroll()">Re-spin (3 left)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PICK DRAFT -->
+      <div id="pickPanel" class="hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div style="font-size:11px;color:#555" id="pickRoundLbl">0 of 11 filled</div>
+            <div class="pbar" style="width:120px;margin:0"><div class="pfill" id="pickProgFill" style="width:0%"></div></div>
+          </div>
+          <div class="budget-bar" id="budgetBarPick"></div>
+          <div class="lines lines-draft" id="lineBarsPick"></div>
+          <div class="lbl">Click a position on the pitch</div>
+          <div class="pos-grid" id="posGrid"></div>
+          <div id="pickCandidates" class="hidden">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
+              <div style="font-size:11px;color:#666;flex:1" id="pickLbl"></div>
+              <button class="btn btn-spin" id="pickSpinBtn" onclick="doPickSpin()">Spin year</button>
+            </div>
+            <div id="pickSpinYearDisp" class="hidden" style="font-size:13px;font-weight:700;color:#c87a00;margin-bottom:5px"></div>
+            <div class="picks" id="pickListB"></div>
+            <div id="revealSectionB" class="hidden">
+              <div class="reveal" id="revealBoxB"></div>
+              <div class="actions"><button class="btn btn-go" onclick="afterPickReveal()">Next →</button></div>
+            </div>
+            <div id="preDraftBtnsB" class="hidden">
+              <div class="actions">
+                <button class="btn btn-go" id="draftBtnB" onclick="doDraftB()" disabled>Draft</button>
+                <button class="btn" onclick="cancelPick()">Cancel</button>
+              </div>
+            </div>
+          </div>
+          <div id="pickDone" class="hidden">
+            <div style="font-size:12px;color:#aaa;margin:.4rem 0">XI complete.</div>
+            <button class="btn btn-go" onclick="goSeason()">Begin season →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEASON -->
+      <div id="seasonPanel" class="hidden">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#ccc" id="leagueTitle">Season</div>
+              <div style="font-size:11px;color:#999" id="seasonModeNote"></div>
+            </div>
+            <button class="btn btn-go" id="simBtn" onclick="simAll()">Play season</button>
+          </div>
+          <div class="lines" id="lineBars"></div>
+          <div class="sdots" id="spDots"></div>
+          <div class="lrec" id="liveRec">0W 0D 0L — 0 pts</div>
+          <div class="ml" id="matchList"></div>
+        </div>
+      </div>
+
+      <!-- RESULT -->
+      <div id="resultPanel" class="hidden">
+        <div class="card">
+          <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+            <div class="bigrec" id="finalRec"></div>
+            <div class="tbadge" id="tierBadge"></div>
+          </div>
+          <div class="flavour" id="flavourTxt"></div>
+          <div class="sgrid">
+            <div class="sbox"><div class="sval" id="sPts"></div><div class="slbl">Points</div></div>
+            <div class="sbox"><div class="sval" id="sGD"></div><div class="slbl">GD</div></div>
+            <div class="sbox"><div class="sval" id="sAvgPot"></div><div class="slbl">Avg pot</div></div>
+            <div class="sbox"><div class="sval" id="sAvgReal"></div><div class="slbl">Avg real</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="team-head">
+            <div class="team-title">Your XI</div>
+            <div class="team-sub" id="teamSub"></div>
+          </div>
+          <div class="roster" id="resultRoster"></div>
+        </div>
+        <div class="card">
+          <div class="lbl" id="leagueTableLbl">Final table</div>
+          <table class="league-table"><thead><tr><th>#</th><th>Club</th><th class="r">W</th><th class="r">D</th><th class="r">L</th><th class="r">GD</th><th class="r">Pts</th></tr></thead><tbody id="leagueBody"></tbody></table>
+        </div>
+        <div class="card" id="scoreCard">
+          <div class="lbl" style="margin-bottom:3px">Overdelivery score</div>
+          <div style="font-size:34px;font-weight:700;color:#e8a000;line-height:1" id="odScore">+0</div>
+          <div style="font-size:12px;color:#bbb;margin-top:4px;line-height:1.5" id="odExplain"></div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap">
+            <input id="playerNameInput" placeholder="Enter your manager name" maxlength="16" style="background:#0a0a0a;border:1px solid #2a2a2a;border-radius:7px;padding:8px 11px;color:#fff;font-size:13px;flex:1;min-width:160px" oninput="document.getElementById('submitScoreBtn').disabled=!this.value.trim()">
+            <button class="btn btn-go" id="submitScoreBtn" onclick="submitScore()" disabled style="padding:8px 14px">Submit to leaderboard</button>
+          </div>
+        </div>
+        <div class="card" id="leaderboardCard">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div class="lbl" id="lbTitle">Leaderboard</div>
+            <div class="seg"><button class="seg-btn on" id="lb-daily" onclick="showLB('daily')">Today</button><button class="seg-btn" id="lb-all" onclick="showLB('all')">All-time</button></div>
+          </div>
+          <table class="league-table" style="margin-top:6px"><thead><tr><th>#</th><th>Manager</th><th class="r">XI rating</th><th class="r">Pts</th><th class="r">Score</th></tr></thead><tbody id="lbBody"><tr><td colspan="5" style="color:#888;text-align:center;padding:12px">No scores yet — be the first!</td></tr></tbody></table>
+        </div>
+        <div class="card">
+          <div class="sharebox" id="shareBox"></div>
+          <div class="actions" style="margin-top:6px"><button class="btn btn-go" onclick="shareImage()">📷 Share image</button><button class="btn" onclick="copyShare()">Copy text</button><button class="btn" onclick="reset()">Draft again</button></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- LEGAL MODALS -->
+<div class="modal-bg hidden" id="mDisclaimer" onclick="if(event.target===this)closeModal('mDisclaimer')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('mDisclaimer')">×</button>
+    <h2>Disclaimer</h2>
+    <div class="msub">Please read</div>
+    <p>What Could Have Been is an independent, fan-made game. It is not affiliated with, endorsed by, sponsored by, licensed by, or otherwise associated with any football club, competition, league, governing body, organisation, game publisher, or ratings provider — including Sports Interactive Limited or SEGA.</p>
+    <p>All club names, player names, ratings, statistics and season data are used for informational, descriptive, editorial and nostalgic purposes only. No official logos, crests, player images, likenesses or other official branding are used.</p>
+    <p>Player ability ratings shown in this game are approximations and creative interpretations generated for entertainment. They are not official Football Manager or Championship Manager data and should not be treated as factual statements about any individual.</p>
+    <p>All trademarks, trade names and other intellectual property rights remain the property of their respective owners.</p>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mPrivacy" onclick="if(event.target===this)closeModal('mPrivacy')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('mPrivacy')">×</button>
+    <h2>Privacy Policy</h2>
+    <div class="msub">Last updated: June 2026</div>
+    <p>This game is designed to collect as little personal data as possible. Here's exactly what happens to your information.</p>
+    <h3>Leaderboard</h3>
+    <p>If you choose to submit a score, the game stores the manager name you type and your game result (points, squad rating, overdelivery score). At present this is stored only in your own browser. When a global leaderboard is enabled, this information will be stored on a server so it can be ranked against other players. Please don't enter your real full name or any personal details as your manager name — a nickname is best.</p>
+    <h3>Analytics</h3>
+    <p>With your consent, we use analytics to understand how the game is used (for example, how many people play and which features are popular). This data is aggregated and anonymous. Analytics will not run unless you accept via the cookie banner, and you can change your choice at any time using "Cookie settings".</p>
+    <h3>Local storage</h3>
+    <p>Your scores and game preferences are saved in your browser's local storage so the game works smoothly. This is functional, stays on your device, and is not used for tracking.</p>
+    <h3>Your choices</h3>
+    <p>We don't sell your data. To request removal of any leaderboard entry, contact <a href="mailto:YOUR@EMAIL.com">YOUR@EMAIL.com</a>. This game is not directed at children under 13.</p>
+  </div>
+</div>
+
+<div class="modal-bg hidden" id="mTerms" onclick="if(event.target===this)closeModal('mTerms')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('mTerms')">×</button>
+    <h2>Terms of Use</h2>
+    <div class="msub">The short version</div>
+    <p>What Could Have Been is provided free of charge, "as is", for entertainment only, with no warranty of any kind. Player ratings, career outcomes and season results are approximations and fictionalised interpretations — they are not factual and shouldn't be relied upon for anything.</p>
+    <p>We may change, update or discontinue the game at any time without notice. We may also reset or remove leaderboard entries, particularly any that are abusive, automated, or contain offensive names.</p>
+    <p>Please don't misuse the game — no automated submissions, scraping, or attempts to disrupt the service or other players.</p>
+    <p>All third-party names and marks belong to their respective owners, as set out in the Disclaimer. These terms are governed by the laws of England and Wales.</p>
+  </div>
+</div>
+
+<!-- COOKIE CONSENT BANNER -->
+<div class="cookie-banner hidden" id="cookieBanner">
+  <div class="ct">We'd like to use analytics cookies to understand how the game is used. Nothing loads until you choose. See our <a onclick="openModal('mPrivacy')">Privacy Policy</a>.</div>
+  <div class="cookie-btns">
+    <button class="ck-decline" onclick="cookieChoice(false)">Decline</button>
+    <button class="ck-accept" onclick="cookieChoice(true)">Accept</button>
+  </div>
+</div>
+
+<script>
+const LEAGUES={
+  pl:{name:"Premier League",teams:[{n:"Man City",s:91},{n:"Arsenal",s:88},{n:"Liverpool",s:89},{n:"Aston Villa",s:82},{n:"Chelsea",s:80},{n:"Newcastle",s:79},{n:"Man Utd",s:77},{n:"West Ham",s:73},{n:"Spurs",s:74},{n:"Brighton",s:72},{n:"Wolves",s:70},{n:"Fulham",s:69},{n:"Brentford",s:68},{n:"Crystal Palace",s:67},{n:"Everton",s:65},{n:"Nottm Forest",s:64},{n:"Bournemouth",s:63},{n:"Burnley",s:59},{n:"Sheff Utd",s:58},{n:"Luton",s:57}],ucl:4,uel:6,rel:17},
+  ll:{name:"La Liga",teams:[{n:"Real Madrid",s:93},{n:"Barcelona",s:90},{n:"Atletico Madrid",s:86},{n:"Real Sociedad",s:77},{n:"Villarreal",s:76},{n:"Athletic Bilbao",s:74},{n:"Valencia",s:73},{n:"Betis",s:72},{n:"Sevilla",s:78},{n:"Osasuna",s:68},{n:"Mallorca",s:67},{n:"Rayo Vallecano",s:66},{n:"Celta Vigo",s:65},{n:"Getafe",s:64},{n:"Girona",s:70},{n:"Alaves",s:59},{n:"Almeria",s:60},{n:"Las Palmas",s:61},{n:"Granada",s:58},{n:"Cadiz",s:62}],ucl:4,uel:6,rel:17},
+  bl:{name:"Bundesliga",teams:[{n:"Bayern Munich",s:92},{n:"Dortmund",s:85},{n:"RB Leipzig",s:84},{n:"Leverkusen",s:83},{n:"Frankfurt",s:75},{n:"Union Berlin",s:76},{n:"Freiburg",s:74},{n:"Stuttgart",s:73},{n:"Wolfsburg",s:71},{n:"Hoffenheim",s:72},{n:"Mainz",s:69},{n:"Augsburg",s:67},{n:"Werder Bremen",s:68},{n:"Monchengladbach",s:70},{n:"Koln",s:66},{n:"Bochum",s:63},{n:"Heidenheim",s:62},{n:"Darmstadt",s:60}],ucl:4,uel:6,rel:15},
+  sa:{name:"Serie A",teams:[{n:"Inter Milan",s:89},{n:"AC Milan",s:86},{n:"Juventus",s:85},{n:"Napoli",s:84},{n:"Atalanta",s:82},{n:"Roma",s:80},{n:"Lazio",s:79},{n:"Fiorentina",s:76},{n:"Bologna",s:74},{n:"Torino",s:70},{n:"Monza",s:68},{n:"Udinese",s:67},{n:"Sassuolo",s:66},{n:"Lecce",s:65},{n:"Hellas Verona",s:64},{n:"Cagliari",s:63},{n:"Empoli",s:62},{n:"Frosinone",s:60},{n:"Salernitana",s:58},{n:"Genoa",s:61}],ucl:4,uel:6,rel:17},
+  l1:{name:"Ligue 1",teams:[{n:"PSG",s:94},{n:"Monaco",s:82},{n:"Marseille",s:80},{n:"Lyon",s:79},{n:"Lens",s:78},{n:"Lille",s:77},{n:"Nice",s:76},{n:"Rennes",s:75},{n:"Toulouse",s:70},{n:"Montpellier",s:68},{n:"Nantes",s:67},{n:"Strasbourg",s:66},{n:"Reims",s:65},{n:"Brest",s:64},{n:"Le Havre",s:63},{n:"Lorient",s:62},{n:"Clermont",s:60},{n:"Metz",s:59}],ucl:3,uel:5,rel:15}
+};
+
+const FM_DEFS={
+  '433':{name:'4-3-3',slots:[{pos:'GK',x:50,y:91},{pos:'RB',x:83,y:77},{pos:'CB',x:65,y:81},{pos:'CB',x:35,y:81},{pos:'LB',x:17,y:77},{pos:'CM',x:68,y:59},{pos:'CM',x:50,y:56},{pos:'CM',x:32,y:59},{pos:'RW',x:78,y:34},{pos:'ST',x:50,y:24},{pos:'LW',x:22,y:34}]},
+  '442':{name:'4-4-2',slots:[{pos:'GK',x:50,y:91},{pos:'RB',x:83,y:77},{pos:'CB',x:65,y:81},{pos:'CB',x:35,y:81},{pos:'LB',x:17,y:77},{pos:'RM',x:83,y:57},{pos:'CM',x:62,y:60},{pos:'CM',x:38,y:60},{pos:'LM',x:17,y:57},{pos:'ST',x:65,y:30},{pos:'ST',x:35,y:30}]},
+  '4231':{name:'4-2-3-1',slots:[{pos:'GK',x:50,y:91},{pos:'RB',x:83,y:77},{pos:'CB',x:65,y:81},{pos:'CB',x:35,y:81},{pos:'LB',x:17,y:77},{pos:'CDM',x:63,y:65},{pos:'CDM',x:37,y:65},{pos:'RAM',x:77,y:46},{pos:'CAM',x:50,y:44},{pos:'LAM',x:23,y:46},{pos:'ST',x:50,y:26}]},
+  '352':{name:'3-5-2',slots:[{pos:'GK',x:50,y:91},{pos:'CB',x:70,y:81},{pos:'CB',x:50,y:83},{pos:'CB',x:30,y:81},{pos:'RWB',x:87,y:62},{pos:'CM',x:68,y:57},{pos:'CM',x:50,y:55},{pos:'CM',x:32,y:57},{pos:'LWB',x:13,y:62},{pos:'ST',x:65,y:29},{pos:'ST',x:35,y:29}]},
+  '532':{name:'5-3-2',slots:[{pos:'GK',x:50,y:91},{pos:'RWB',x:87,y:74},{pos:'CB',x:71,y:81},{pos:'CB',x:50,y:83},{pos:'CB',x:29,y:81},{pos:'LWB',x:13,y:74},{pos:'CM',x:68,y:57},{pos:'CM',x:50,y:55},{pos:'CM',x:32,y:57},{pos:'ST',x:65,y:29},{pos:'ST',x:35,y:29}]},
+  '451':{name:'4-5-1',slots:[{pos:'GK',x:50,y:91},{pos:'RB',x:83,y:77},{pos:'CB',x:65,y:81},{pos:'CB',x:35,y:81},{pos:'LB',x:17,y:77},{pos:'RM',x:86,y:55},{pos:'CM',x:68,y:55},{pos:'CM',x:50,y:57},{pos:'CM',x:32,y:55},{pos:'LM',x:14,y:55},{pos:'ST',x:50,y:26}]}
+};
+
+const POS_MAP={GK:['GK'],CB:['CB'],RB:['RB','RWB'],LB:['LB','LWB'],CDM:['CDM','CM'],CM:['CM','CDM','CAM'],CAM:['CAM','CM'],RAM:['CAM','CM','RW'],LAM:['CAM','CM','LW'],RM:['RM','RW','CM'],LM:['LM','LW','CM'],RW:['RW','RM','CAM'],LW:['LW','LM','CAM'],ST:['ST','CAM'],RWB:['RB','RWB','LB'],LWB:['LB','LWB','RB']};
+const FM_YEARS=[2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+// Spin pool: years plus a Legends slot (appears ~1 in 8 spins)
+const SPIN_POOL=[...FM_YEARS,'LEGENDS','LEGENDS'];
+
+let WK=[];
+let G={fm:'4231',league:'pl',gm:'wk',sm:'real',dm:'spin',respinsMax:3,respinsUsed:0,showNums:true,slots:[],band:[],opts:[],sel:null,matches:[],phase:'setup',activePosIdx:null,selB:null,spinSlotIdx:null,playerStats:{},daily:false,seed:0,hideRatings:false,budget:{gold:4,silver:4,bronze:3}};
+
+// ── Seeded RNG (mulberry32) for daily challenge reproducibility ──
+let _rngState=0;
+function seedRng(s){_rngState=s>>>0;}
+function srand(){
+  // If daily mode, use seeded; else Math.random
+  if(!G.daily)return Math.random();
+  _rngState|=0;_rngState=_rngState+0x6D2B79F5|0;
+  let t=Math.imul(_rngState^_rngState>>>15,1|_rngState);
+  t=t+Math.imul(t^t>>>7,61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296;
+}
+function todaySeed(){
+  const d=new Date();
+  return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();
+}
+function dateStr(){
+  const d=new Date();
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+// ── LOAD DATA ──────────────────────────────────────────────────────────────
+fetch('players.json')
+  .then(r=>{if(!r.ok)throw new Error();return r.json();})
+  .then(data=>{
+    WK=data.players||[];
+    document.getElementById('loadingMsg').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    setFm();updateDesc();
+    if(G._pendingMode){const m=G._pendingMode;G._pendingMode=null;enterGame(m);}
+  })
+  .catch(()=>{
+    document.getElementById('loadingMsg').classList.add('hidden');
+    document.getElementById('errMsg').classList.remove('hidden');
+  });
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function cleanName(n){return n.replace(/\d{2}\.\d+/g,'').replace(/\s+/g,' ').trim();}
+function displayName(n){
+  n=cleanName(n);
+  if(n.includes(','))return n.split(',').map(s=>s.trim()).reverse().join(' ');
+  return n;
+}
+function canonName(n){
+  // Canonical key: strip revision suffixes, lowercase, collapse spaces.
+  // Same player across different FM years resolves to the same key.
+  return cleanName(n).toLowerCase().replace(/\s+/g,' ').trim();
+}
+function shortName(n){
+  const dn=displayName(n);
+  const p=dn.split(' ');
+  return p.length>1?p[p.length-1]:dn;
+}
+
+// ── SETUP ──────────────────────────────────────────────────────────────────
+function setGM(m){G.gm=m;document.getElementById('gm-wk').className='seg-btn'+(m==='wk'?' on':'');document.getElementById('gm-real').className='seg-btn'+(m==='real'?' on':'');updateDesc();}
+function setSM(m){G.sm=m;document.getElementById('sm-real').className='seg-btn'+(m==='real'?' on':'');document.getElementById('sm-wk').className='seg-btn'+(m==='wk'?' on':'');updateDesc();}
+function setRespins(n){G.respinsMax=n;[1,2,3].forEach(x=>document.getElementById('rs-'+x).className='seg-btn'+(x===n?' on':''));updateDesc();}
+function updateDesc(){
+  const parts=[];
+  parts.push(G.gm==='wk'?'Wonderkid: potential shown, reality revealed on draft.':'Real: ratings shown upfront.');
+  parts.push(G.sm==='wk'?'What if: season played with potential ratings (the dream).':'Reality: season played with real career ratings.');
+  parts.push('Click a position, then spin its FM year — you might land on ★ LEGENDS (the cult heroes). '+G.respinsMax+' respin'+(G.respinsMax>1?'s':'')+' allowed per draft.');
+  document.getElementById('mode-desc').textContent=parts.join(' ');
+}
+function setFm(){G.fm=document.getElementById('fmPick').value;renderPitch([],null,false);}
+function setRatingsVisible(v){G.hideRatings=!v;document.getElementById('rv-show').className='seg-btn'+(v?' on':'');document.getElementById('rv-hide').className='seg-btn'+(!v?' on':'');}
+function setNums(v){G.showNums=v;document.getElementById('tn-on').className='seg-btn'+(v?' on':'');document.getElementById('tn-off').className='seg-btn'+(!v?' on':'');renderPitch(G.band,G.spinSlotIdx,G.phase==='draft');}
+
+// ── PITCH ──────────────────────────────────────────────────────────────────
+function dotCls(p,inSeason){
+  if(!p)return '';
+  if(!inSeason)return 'filled';
+  const r=G.sm==='wk'?p.pot:p.real;
+  const gap=p.pot-r;
+  return gap<=5?'cg':gap<=20?'co':'cb';
+}
+function numCls(r){return r>=80?'g':r>=65?'o':'b';}
+// Role of a formation slot position → att / mid / def / gk (drives dot colour, 38-0 style)
+function roleOf(pos){
+  if(pos==='GK')return 'gk';
+  if(['CB','RB','LB','RWB','LWB'].includes(pos))return 'def';
+  if(['CDM','CM','RM','LM'].includes(pos))return 'mid';
+  return 'att'; // ST, CAM, RAM, LAM, RW, LW
+}
+function tierOf(p){
+  // Tier by POTENTIAL rating: gold 88+, silver 80-87, bronze <80
+  if(p.pot>=88)return 'gold';
+  if(p.pot>=80)return 'silver';
+  return 'bronze';
+}
+function tierLeft(t){return G.budget[t];}
+function tierLabel(t){return t==='gold'?'Gold':t==='silver'?'Silver':'Bronze';}
+function budgetSpent(){return (4-G.budget.gold)+(4-G.budget.silver)+(3-G.budget.bronze);}
+function initials(name){
+  const dn=displayName(name).split(' ').filter(Boolean);
+  if(dn.length===1)return dn[0].substring(0,2).toUpperCase();
+  return (dn[0][0]+dn[dn.length-1][0]).toUpperCase();
+}
+
+function renderPitch(band,selectedIdx,clickable){
+  const el=document.getElementById('pitchSlots');
+  if(!el)return;
+  const slots=FM_DEFS[G.fm].slots;
+  const inSeason=G.phase==='season'||G.phase==='result';
+  el.innerHTML=slots.map((sl,i)=>{
+    const p=band[i];
+    const isSel=i===selectedIdx;
+    const isClick=(G.dm==='spin'||G.dm==='pick')&&!p&&G.phase==='draft';
+    const role=roleOf(sl.pos);
+    const dotInner=p?initials(p.n):sl.pos.substring(0,3);
+    const dotCls2=p?role:'empty';
+    const nm=p?shortName(p.n):'';
+    let numStr='';
+    if(G.showNums&&p&&!(G.hideRatings&&!inSeason)){
+      const v=inSeason?(G.sm==='wk'?p.pot:p.real):(G.gm==='wk'?p.pot:p.real);
+      numStr=`<div class="pnum ${numCls(v)}">${v}</div>`;
+    }
+    return `<div class="pslot${isClick?' clickable':''}${isSel?' selected':''}" style="left:${sl.x}%;top:${sl.y}%" ${isClick?`onclick="onPitchClick(${i})"`:''}>
+      <div class="pdot ${dotCls2}">${dotInner}</div>
+      ${nm?`<div class="pname">${nm}</div>`:''}${numStr}
+    </div>`;
+  }).join('');
+}
+
+function renderBudget(){
+  const chips=['gold','silver','bronze'].map(t=>{
+    const max=t==='bronze'?3:4;
+    const left=G.budget[t];
+    const spent=left<=0;
+    return `<div class="bchip ${t}${spent?' spent':''}"><span class="bdot"></span>${tierLabel(t)} ${left}/${max}</div>`;
+  }).join('');
+  const html2='<span class="budget-lbl">Squad budget</span>'+chips;
+  const a=document.getElementById('budgetBarSpin');
+  const b=document.getElementById('budgetBarPick');
+  if(a)a.innerHTML=html2;
+  if(b)b.innerHTML=html2;
+}
+
+function renderRoster(targetId,opts){
+  opts=opts||{};
+  const el=document.getElementById(targetId);
+  if(!el)return;
+  const pl=[];
+  G.slots.forEach((sl,i)=>{if(G.band[i])pl.push({p:G.band[i],pos:sl.pos,idx:i});});
+  el.innerHTML=pl.map(({p,pos,idx})=>{
+    const role=roleOf(pos);
+    const nm=displayName(p.n);
+    const era=p.fm===0?'★ Legend':"FM"+p.fm;
+    const club=p.club||'';
+    let right='';
+    if(opts.stats){
+      const s=G.playerStats[p.n]||{goals:0,assists:0,ratings:[]};
+      const avg=s.ratings.length?(s.ratings.reduce((a,b)=>a+b,0)/s.ratings.length).toFixed(1):'–';
+      right=`<div class="rstat">
+        <span><span class="v">${s.goals}</span><span class="k">G</span></span>
+        <span><span class="v">${s.assists}</span><span class="k">A</span></span>
+        <span><span class="v">${avg}</span><span class="k">▲</span></span>
+      </div>`;
+    } else if(opts.gap){
+      const gap=p.pot-p.real;
+      const gc=gap<=5?'g':gap<=20?'o':'b';
+      right=`<div class="rgap ${gc}">${p.pot}→${p.real}</div>`;
+    } else {
+      right=`<div class="rmeta"><span class="rclub">${club}</span><span class="ryear">${era}</span></div>`;
+    }
+    const isLegend=p.fm===0;
+    const tier=isLegend?'legend':tierOf(p);
+    const tierTxt=isLegend?'★':tier[0].toUpperCase();
+    return `<div class="rrow">
+      <div class="rpill ${role}">${pos}</div>
+      <div class="rname">${nm}</div>
+      <span class="rtier ${tier}">${tierTxt}</span>
+      ${right}
+    </div>`;
+  }).join('');
+}
+
+function showPanel(id){
+  ['setupPanel','spinPanel','pickPanel','seasonPanel','resultPanel'].forEach(p=>
+    document.getElementById(p).classList[p===id?'remove':'add']('hidden'));
+}
+
+// ── DRAFT ──────────────────────────────────────────────────────────────────
+function startDraft(daily){
+  G.daily=!!daily;
+  if(G.daily){
+    // Daily challenge: fixed settings for fairness
+    G.seed=todaySeed();
+    seedRng(G.seed);
+    G.fm='4231';G.league='pl';G.gm='wk';G.sm='real';G.dm='spin';G.respinsMax=3;
+    document.getElementById('fmPick').value='4231';
+    document.getElementById('leaguePick').value='pl';
+  }
+  G.league=document.getElementById('leaguePick').value;
+  G.slots=FM_DEFS[G.fm].slots;
+  G.band=new Array(G.slots.length).fill(null);
+  G.budget={gold:4,silver:4,bronze:3};
+  G.respinsUsed=0;
+  G.dm='spin';
+  G.phase='draft';G.spinSlotIdx=null;
+  document.getElementById('numsToggle').style.display='flex';
+  renderBudget();
+  renderLines();
+  // Daily banner
+  document.getElementById('dailyBanner').classList[G.daily?'remove':'add']('hidden');
+  if(G.daily)document.getElementById('dailyBannerTxt').textContent=`★ Daily Challenge — ${dateStr()} — same draft pool for everyone · ranked by REAL ratings (how good they actually became)`;
+  showPanel('spinPanel');renderPitch(G.band,null,true);updSpinLbl();updateRespinUI();
+}
+function startDaily(){startDraft(true);}
+
+function updSpinLbl(){
+  const n=G.band.filter(Boolean).length;
+  document.getElementById('roundLbl').textContent=`${n} of ${G.slots.length} positions filled`;
+  document.getElementById('progFill').style.width=Math.round(n/G.slots.length*100)+'%';
+}
+function updPickLbl(){
+  const n=G.band.filter(Boolean).length;
+  document.getElementById('pickRoundLbl').textContent=`${n} of ${G.slots.length} positions filled`;
+  document.getElementById('pickProgFill').style.width=Math.round(n/G.slots.length*100)+'%';
+}
+
+// Click pitch slot (works in both spin and pick mode during draft)
+function onPitchClick(idx){
+  if(G.band[idx])return;
+  if(G.dm==='spin'){
+    G.spinSlotIdx=idx;
+    const sl=G.slots[idx];
+    document.getElementById('spinSub').textContent=`picking ${sl.pos} — spin to draw an FM year`;
+    document.getElementById('spinYear').textContent='–';
+    document.getElementById('spinBtn').disabled=false;
+    document.getElementById('picksWrap').classList.add('hidden');
+    renderPitch(G.band,idx,true);
+  } else {
+    pickSlot(idx);
+  }
+}
+
+// ── SPIN DRAFT ─────────────────────────────────────────────────────────────
+function doSpin(){
+  if(G.spinSlotIdx===null)return;
+  const result=SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
+  const el=document.getElementById('spinYear');
+  const sub=document.getElementById('spinSub');
+  let t=0;
+  document.getElementById('spinBtn').disabled=true;
+  const iv=setInterval(()=>{
+    const r=SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
+    el.textContent=r==='LEGENDS'?'★ LEGENDS':'FM '+r;
+    if(++t>18){
+      clearInterval(iv);
+      if(result==='LEGENDS'){
+        el.innerHTML='<span style="color:#e8a000">★ LEGENDS</span>';
+        sub.innerHTML='cult heroes — <span style="color:#f0c020">free pick, no budget cost!</span>';
+        buildSpinCands('LEGENDS',G.spinSlotIdx);
+      } else {
+        el.textContent='FM '+result;
+        sub.textContent='FM '+result+' — pick a player';
+        buildSpinCands(result,G.spinSlotIdx);
+      }
+    }
+  },55);
+  document.getElementById('picksWrap').classList.add('hidden');
+}
+
+function buildSpinCands(yr,slotIdx){
+  const cands=getCands(G.slots[slotIdx].pos,yr);
+  G.opts=cands;G.sel=null;
+  document.getElementById('picksWrap').classList.remove('hidden');
+  document.getElementById('revealSection').classList.add('hidden');
+  document.getElementById('preDraftBtns').classList.remove('hidden');
+  document.getElementById('draftBtn').disabled=true;
+  renderPickList('pickList',cands,'selPick');
+}
+
+// Get weighted candidates - top rated players more likely to appear
+function getCands(slotPos,yr){
+  const valid=POS_MAP[slotPos]||[slotPos];
+  const draftedSet=new Set(G.band.filter(Boolean).map(b=>canonName(b.n)));
+  let pool=WK.filter(p=>valid.some(v=>p.pos.includes(v))&&!draftedSet.has(canonName(p.n)));
+  // LEGENDS mode: only cult heroes (fm=0)
+  if(yr==='LEGENDS'){
+    // ALL undrafted cult heroes
+    const allLegends=WK.filter(p=>p.fm===0&&!draftedSet.has(canonName(p.n)));
+    // Position-matched legends first
+    let exact=allLegends.filter(p=>valid.some(v=>p.pos.includes(v)));
+    let cands;
+    if(exact.length>=8){
+      cands=exact.sort(()=>srand()-.5).slice(0,8);
+    } else {
+      // Top up with the most iconic legends from any position (by potential) — never modern players
+      const extra=allLegends.filter(p=>!exact.includes(p)).sort((a,b)=>b.pot-a.pot);
+      cands=[...exact,...extra].slice(0,8);
+    }
+    return cands.sort((a,b)=>b.pot-a.pot);
+  }
+  // Normal years exclude legends (fm=0)
+  pool=pool.filter(p=>p.fm!==0);
+  // Year filter with fallback
+  let yearPool=yr?pool.filter(p=>p.fm===yr):pool;
+  if(yr&&yearPool.length<4)yearPool=[...yearPool,...pool.filter(p=>Math.abs(p.fm-yr)<=2&&!yearPool.includes(p))];
+  if(yearPool.length<4)yearPool=[...yearPool,...pool.filter(p=>!yearPool.includes(p))];
+  // Dedup by canonical name so the same player (across years) never appears twice in one spin
+  const seen=new Set();
+  yearPool=yearPool.filter(p=>{const c=canonName(p.n);if(seen.has(c))return false;seen.add(c);return true;});
+  // Weight by pot: top 2 always highest, rest weighted random
+  yearPool.sort((a,b)=>b.pot-a.pot);
+  const top2=yearPool.slice(0,2);
+  const rest=yearPool.slice(2);
+  const weighted=[];
+  rest.forEach(p=>{const w=Math.max(1,p.pot-70);for(let i=0;i<w;i++)weighted.push(p);});
+  const picked=new Set(top2.map(p=>p.n));
+  const random6=[];
+  let attempts=0;
+  while(random6.length<6&&attempts<300){
+    attempts++;
+    const p=weighted[Math.floor(srand()*weighted.length)];
+    if(p&&!picked.has(p.n)){picked.add(p.n);random6.push(p);}
+  }
+  rest.forEach(p=>{if(random6.length<6&&!picked.has(p.n)){picked.add(p.n);random6.push(p);}});
+  let result=[...top2,...random6].slice(0,8);
+  // ── BUDGET GUARANTEE ──
+  // Every spin must contain affordable players for the remaining budget, or a
+  // limited-respin draft could dead-end (e.g. only GK left, only bronze budget,
+  // but the spun year has no bronze keeper). We guarantee >=3 affordable picks,
+  // pulling from the spun year first, then ANY year if the year lacks them.
+  const affordable=p=>tierLeft(tierOf(p))>0;
+  const need=Math.min(3,result.length);
+  if(result.filter(affordable).length<need){
+    // First try the spun year, then the full position pool (all years)
+    const resultNames=new Set(result.map(p=>p.n));
+    let affPool=yearPool.filter(p=>affordable(p)&&!resultNames.has(p.n));
+    if(affPool.length<need){
+      const extra=pool.filter(p=>affordable(p)&&!resultNames.has(p.n)&&!affPool.includes(p));
+      affPool=[...affPool,...extra];
+    }
+    affPool.sort((a,b)=>b.pot-a.pot);
+    // Replace unaffordable entries (from the back) with affordable ones
+    for(let k=result.length-1;k>=0&&affPool.length>0;k--){
+      if(!affordable(result[k])){
+        const repl=affPool.shift();
+        result[k]=repl;resultNames.add(repl.n);
+      }
+      if(result.filter(affordable).length>=need)break;
+    }
+  }
+  return result;
+}
+
+function renderPickList(listId,cands,selFn){
+  const isWk=G.gm==='wk';
+  document.getElementById(listId).innerHTML=cands.map((p,i)=>{
+    const v=isWk?p.pot:p.real;
+    const cls=isWk?'pot':'real';
+    const showNum=!G.hideRatings;
+    const nm=displayName(p.n);
+    const hasHype=p.hype&&p.hype.length>10;
+    const eraLabel=p.fm===0?'★ Legend':'FM'+p.fm;
+    const isLegend=p.fm===0;
+    const tier=tierOf(p);
+    const locked=!isLegend&&tierLeft(tier)<=0;
+    const tBadge=isLegend
+      ?`<span class="tbadge2 legend">★ FREE</span>`
+      :`<span class="tbadge2 ${tier}">${tier[0].toUpperCase()}</span>`;
+    return `<div class="pick${locked?' locked':''}${isLegend?' islegend':''}" id="${listId}_${i}" ${locked?'':`onclick="${selFn}(${i})"`}>
+      <div class="pick-num ${cls}">${showNum?v:'?'}</div>
+      <div class="pbody">
+        <div class="pn">${nm}<span class="ptag">${p.pos[0]}</span> ${tBadge}</div>
+        <div class="pm">${p.nat} · ${p.club} · ${eraLabel}</div>
+        ${locked?`<div class="lockmsg">${tierLabel(tier)} budget spent</div>`:(hasHype?`<div class="ph">${p.hype}</div>`:'')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selPick(i){G.sel=i;document.querySelectorAll('#pickList .pick').forEach((el,idx)=>el.classList.toggle('sel',idx===i));document.getElementById('draftBtn').disabled=false;}
+
+function doDraft(){
+  if(G.sel===null||G.spinSlotIdx===null)return;
+  const p=G.opts[G.sel];
+  if(p.fm!==0){
+    if(tierLeft(tierOf(p))<=0)return;
+    G.budget[tierOf(p)]--;
+  }
+  G.band[G.spinSlotIdx]=p;
+  document.querySelectorAll('#pickList .pick').forEach((el,idx)=>{if(idx!==G.sel)el.style.display='none';});
+  document.getElementById('preDraftBtns').classList.add('hidden');
+  showReveal(p,'revealSection','revealBox');
+  G.spinSlotIdx=null;
+  updSpinLbl();
+  renderBudget();
+  renderLines();
+  renderPitch(G.band,null,true);
+  document.getElementById('spinInstr').textContent=G.band.filter(Boolean).length>=G.slots.length?'All positions filled!':'Click next position on the pitch';
+}
+
+function showReveal(p,secId,boxId){
+  const gap=p.pot-p.real;
+  const cls=gap<=0?'g':gap<=20?'o':'b';
+  const gapTxt=gap<=0?`+${Math.abs(gap)} overdelivered`:`−${gap} gap`;
+  const hasFate=p.fate&&p.fate.length>20;
+  document.getElementById(boxId).innerHTML=`
+    <div class="rev-row">
+      <div><div class="rev-lbl">Reality rating</div><div class="rev-real ${cls}">${p.real}</div></div>
+      <div style="border-left:1px solid #1a1a1a;padding-left:10px">
+        <div class="rev-lbl">vs potential ${p.pot}</div>
+        <div class="rev-gap ${cls}">${gapTxt}</div>
+      </div>
+    </div>
+    ${hasFate?`<div class="rev-fate">${p.fate}</div>`:''}`;
+  document.getElementById(secId).classList.remove('hidden');
+}
+
+function nextRound(){
+  if(G.band.filter(Boolean).length>=G.slots.length){goSeason();return;}
+  document.getElementById('picksWrap').classList.add('hidden');
+  document.getElementById('spinYear').textContent='–';
+  document.getElementById('spinSub').textContent='select a position first';
+  document.getElementById('spinBtn').disabled=true;
+  document.querySelectorAll('#pickList .pick').forEach(el=>el.style.display='');
+  G.sel=null;G.spinSlotIdx=null;
+  renderPitch(G.band,null,true);
+  document.getElementById('spinInstr').textContent='Click a position on the pitch';
+}
+
+function reroll(){
+  if(G.respinsUsed>=G.respinsMax){return;}
+  G.respinsUsed++;
+  document.getElementById('picksWrap').classList.add('hidden');
+  document.getElementById('spinBtn').disabled=false;
+  document.getElementById('spinSub').textContent='ready to re-spin';
+  G.sel=null;
+  updateRespinUI();
+}
+function updateRespinUI(){
+  const left=G.respinsMax-G.respinsUsed;
+  // Update the re-spin button label + disable when none left
+  document.querySelectorAll('.respin-btn').forEach(b=>{
+    b.textContent=left>0?`Re-spin (${left} left)`:'No respins left';
+    b.disabled=left<=0;
+  });
+}
+
+// ── PICK MODE ──────────────────────────────────────────────────────────────
+function buildPosGrid(){
+  document.getElementById('posGrid').innerHTML=G.slots.map((sl,i)=>`<button class="pos-btn${G.band[i]?' done':''}${G.activePosIdx===i?' active':''}" onclick="pickSlot(${i})">${sl.pos}${G.band[i]?' ✓':''}</button>`).join('');
+  updPickLbl();
+  if(G.band.filter(Boolean).length>=G.slots.length){
+    document.getElementById('pickCandidates').classList.add('hidden');
+    document.getElementById('pickDone').classList.remove('hidden');
+    document.getElementById('posGrid').classList.add('hidden');
+  }
+}
+
+function pickSlot(idx){
+  if(G.band[idx])return;
+  G.activePosIdx=idx;G.selB=null;
+  G.spinSlotIdx=idx;
+  const sl=G.slots[idx];
+  const cands=getCands(sl.pos,null); // no year filter for pick mode initially
+  G.opts=cands;
+  document.getElementById('pickLbl').textContent=`Picking ${sl.pos}`;
+  document.getElementById('pickSpinYearDisp').classList.add('hidden');
+  document.getElementById('pickCandidates').classList.remove('hidden');
+  document.getElementById('revealSectionB').classList.add('hidden');
+  document.getElementById('preDraftBtnsB').classList.remove('hidden');
+  document.getElementById('draftBtnB').disabled=true;
+  document.querySelectorAll('#pickListB .pick').forEach(el=>el.style.display='');
+  renderPickList('pickListB',cands,'selPickB');
+  buildPosGrid();
+  renderPitch(G.band,idx,true);
+}
+
+function doPickSpin(){
+  if(G.activePosIdx===null)return;
+  const result=SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
+  const disp=document.getElementById('pickSpinYearDisp');
+  let t=0;
+  document.getElementById('pickSpinBtn').disabled=true;
+  const iv=setInterval(()=>{
+    const r=SPIN_POOL[Math.floor(Math.random()*SPIN_POOL.length)];
+    disp.textContent=r==='LEGENDS'?'★ LEGENDS':'FM '+r;
+    disp.classList.remove('hidden');
+    if(++t>18){
+      clearInterval(iv);
+      disp.innerHTML=result==='LEGENDS'?'<span style="color:#e8a000">★ LEGENDS — locked in</span>':'FM '+result+' — locked in';
+      document.getElementById('pickSpinBtn').disabled=false;
+      const cands=getCands(G.slots[G.activePosIdx].pos,result);
+      G.opts=cands;G.selB=null;
+      document.getElementById('draftBtnB').disabled=true;
+      document.querySelectorAll('#pickListB .pick').forEach(el=>el.style.display='');
+      renderPickList('pickListB',cands,'selPickB');
+    }
+  },55);
+}
+
+function selPickB(i){G.selB=i;document.querySelectorAll('#pickListB .pick').forEach((el,idx)=>el.classList.toggle('sel',idx===i));document.getElementById('draftBtnB').disabled=false;}
+
+function doDraftB(){
+  if(G.selB===null)return;
+  const p=G.opts[G.selB];
+  if(p.fm!==0){
+    if(tierLeft(tierOf(p))<=0)return;
+    G.budget[tierOf(p)]--;
+  }
+  G.band[G.activePosIdx]=p;
+  document.querySelectorAll('#pickListB .pick').forEach((el,idx)=>{if(idx!==G.selB)el.style.display='none';});
+  document.getElementById('preDraftBtnsB').classList.add('hidden');
+  showReveal(p,'revealSectionB','revealBoxB');
+  G.spinSlotIdx=null;
+  renderBudget();
+  renderLines();
+  renderPitch(G.band,null,true);
+}
+
+function afterPickReveal(){
+  document.getElementById('revealSectionB').classList.add('hidden');
+  document.getElementById('pickCandidates').classList.add('hidden');
+  document.getElementById('pickSpinYearDisp').classList.add('hidden');
+  document.getElementById('pickSpinBtn').disabled=false;
+  document.querySelectorAll('#pickListB .pick').forEach(el=>el.style.display='');
+  G.selB=null;G.activePosIdx=null;G.spinSlotIdx=null;
+  buildPosGrid();
+  renderPitch(G.band,null,true);
+}
+
+function cancelPick(){
+  document.getElementById('pickCandidates').classList.add('hidden');
+  G.activePosIdx=null;G.selB=null;G.spinSlotIdx=null;
+  buildPosGrid();
+  renderPitch(G.band,null,true);
+}
+
+// ── SEASON ─────────────────────────────────────────────────────────────────
+function goSeason(){
+  G.phase='season';G.spinSlotIdx=null;
+  const lg=LEAGUES[G.league];
+  // Enable the play button immediately (defensive — before any logic that could fail)
+  const _sb=document.getElementById('simBtn');if(_sb)_sb.disabled=false;
+  renderPitch(G.band,-1,false);
+  showPanel('seasonPanel');
+  document.getElementById('leagueTitle').textContent=lg.name+' Season';
+  renderLines('lineBars');
+  document.getElementById('seasonModeNote').textContent=G.sm==='wk'?'⚡ What If mode — playing with wonderkid potential ratings':'Playing with real career ratings';
+
+  // Real season length = (teams-1) home & away. 20 teams=38, 18 teams=34.
+  G._games=(lg.teams.length-1)*2;
+  const opponents=[...lg.teams,...lg.teams].sort(()=>Math.random()-.5);
+  G._opps=opponents;G.matches=[];
+  G.playerStats={};
+  G.band.filter(Boolean).forEach(p=>{G.playerStats[p.n]={goals:0,assists:0,ratings:[]};});
+
+  // Full season table sim — each team plays a full home & away schedule
+  // (38 games in a 20-team league, 34 in an 18-team league)
+  const teams=lg.teams;
+  G._table=teams.map(t=>({n:t.n,s:t.s,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,isUs:false}));
+  G._table.push({n:'Your XI',s:0,p:0,w:0,d:0,l:0,gf:0,ga:0,pts:0,isUs:true});
+
+  // Pre-simulate ALL other teams' 38 games (each plays a representative schedule)
+  teams.forEach(t=>{
+    const tRow=G._table.find(r=>r.n===t.n);
+    for(let g=0;g<G._games;g++){
+      const opp=teams.filter(o=>o!==t)[Math.floor(Math.random()*(teams.length-1))];
+      const diff=(t.s-opp.s)*0.028;
+      const wP=Math.max(0.08,Math.min(0.88,0.42+diff));
+      const dP=Math.max(0.12,0.26-Math.abs(diff)*0.6);
+      const r=Math.random();
+      if(r<wP){tRow.w++;tRow.pts+=3;tRow.gf+=Math.floor(Math.random()*3)+1;tRow.ga+=Math.floor(Math.random()*2);}
+      else if(r<wP+dP){tRow.d++;tRow.pts+=1;const s=Math.floor(Math.random()*2);tRow.gf+=s;tRow.ga+=s;}
+      else{tRow.l++;tRow.gf+=Math.floor(Math.random()*2);tRow.ga+=Math.floor(Math.random()*3)+1;}
+      tRow.p++;
+    }
+  });
+
+  document.getElementById('spDots').innerHTML=opponents.map((_,i)=>`<div class="sd p" id="sd${i}"></div>`).join('');
+  document.getElementById('matchList').innerHTML='';
+  document.getElementById('liveRec').textContent='0W 0D 0L — 0 pts';
+  const sb=document.getElementById('simBtn');if(sb){sb.textContent='Play '+G._games+' games';sb.disabled=false;}
+}
+
+// ── Positional line strengths: attack / midfield / defence (GK heavy) ──
+function lineStrengths(){
+  const val=p=>G.sm==='wk'?p.pot:p.real;
+  const ATK=['ST','CAM','RAM','LAM','RW','LW'];
+  const MID=['CM','CDM','RM','LM'];
+  const atk=[],mid=[],def=[];let gk=null;
+  G.slots.forEach((sl,i)=>{
+    const p=G.band[i];if(!p)return;
+    if(sl.pos==='GK')gk=val(p);
+    else if(ATK.includes(sl.pos))atk.push(val(p));
+    else if(MID.includes(sl.pos))mid.push(val(p));
+    else def.push(val(p));
+  });
+  const avg=a=>a.length?a.reduce((s,v)=>s+v,0)/a.length:72;
+  const atkR=avg(atk),midR=avg(mid),defOut=avg(def);
+  // GK is ~40% of the defensive line — a bronze keeper really hurts
+  const defR=gk!=null?(defOut*0.6+gk*0.4):defOut;
+  return {atk:atkR,mid:midR,def:defR,gk:gk};
+}
+// keep getTeamStr as overall (used for avg displays/expected pts)
+function renderLines(targetId){
+  const L=lineStrengths();
+  const ids=targetId?[targetId]:['lineBars','lineBarsSpin','lineBarsPick'];
+  const bar=(cls,k,v,filled)=>{
+    const shown=filled>0?Math.round(v):'–';
+    const w=filled>0?Math.max(5,Math.min(100,(v-50)/45*100)):0;
+    return `<div class="lineb ${cls}"><div class="lk">${k}</div><div class="lv">${shown}</div><div class="lbar"><div class="lfill" style="width:${w}%"></div></div></div>`;
+  };
+  // Count how many players are in each line so empty lines show "–"
+  const ATK=['ST','CAM','RAM','LAM','RW','LW'],MID=['CM','CDM','RM','LM'];
+  let na=0,nm=0,nd=0;
+  G.slots.forEach((sl,i)=>{if(!G.band[i])return;if(sl.pos==='GK')nd++;else if(ATK.includes(sl.pos))na++;else if(MID.includes(sl.pos))nm++;else nd++;});
+  const htmlOut=bar('att','Attack',L.atk,na)+bar('mid','Midfield',L.mid,nm)+bar('def','Defence',L.def,nd);
+  ids.forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=htmlOut;});
+}
+function getTeamStr(){
+  const pl=G.band.filter(Boolean);
+  return pl.reduce((a,p)=>a+(G.sm==='wk'?p.pot:p.real),0)/pl.length;
+}
+function samplePoisson(lam){
+  lam=Math.max(0.05,lam);
+  const L=Math.exp(-lam);let k=0,p=1;
+  do{k++;p*=Math.random();}while(p>L);
+  return Math.min(6,k-1);
+}
+function simMatch(oppStr){
+  const L=lineStrengths();
+  const midTilt=(L.mid-72)*0.30;
+  const k=19,base=1.45;
+  // Your attack (boosted by midfield) vs their defence → goals for
+  const xgf=base*Math.exp((L.atk+midTilt-oppStr)/k);
+  // Their attack vs your defence (boosted by midfield) → goals against
+  const xga=base*Math.exp((oppStr-L.def-midTilt)/k);
+  const ms=samplePoisson(xgf);
+  const os=samplePoisson(xga);
+  const res=ms>os?'w':ms<os?'l':'d';
+  return{res,ms,os};
+}
+
+function genPlayerStats(res,ms){
+  const pl=G.band.filter(Boolean);
+  // Assign scoring weight by position role using the SLOT position (not player's natural pos)
+  const slotPos=i=>G.slots[i]?.pos||'CM';
+  const scoreWeight=p=>{
+    const idx=G.band.indexOf(p);
+    const pos=slotPos(idx);
+    if(['ST'].includes(pos))return 10;
+    if(['CAM','LW','RW','LAM','RAM'].includes(pos))return 6;
+    if(['LM','RM'].includes(pos))return 4;
+    if(['CM'].includes(pos))return 2.5;
+    if(['CDM'].includes(pos))return 1;
+    if(['LB','RB','LWB','RWB'].includes(pos))return 0.6;
+    if(['CB'].includes(pos))return 0.4;
+    return 0.2; // GK
+  };
+  const assistWeight=p=>{
+    const idx=G.band.indexOf(p);
+    const pos=slotPos(idx);
+    if(['CAM','LW','RW','LAM','RAM'].includes(pos))return 8;
+    if(['ST'].includes(pos))return 4;
+    if(['LM','RM','CM'].includes(pos))return 5;
+    if(['LB','RB','LWB','RWB'].includes(pos))return 3;
+    if(['CDM'].includes(pos))return 2;
+    return 0.3;
+  };
+  // FM-style ratings: 6.5-7.6 typical, higher for wins and better players
+  const base=res==='w'?7.25:res==='d'?6.95:6.65;
+  pl.forEach(p=>{
+    const noise=(Math.random()-.5)*0.9;
+    const rb=(p.real-72)/45; // real rating influences performance
+    const rating=Math.min(9.8,Math.max(5.8,base+noise+rb));
+    G.playerStats[p.n].ratings.push(rating);
+  });
+  // Weighted goal allocation
+  const goalPool=[];
+  pl.forEach(p=>{const w=scoreWeight(p);for(let i=0;i<Math.round(w*10);i++)goalPool.push(p);});
+  const assistPool=[];
+  pl.forEach(p=>{const w=assistWeight(p);for(let i=0;i<Math.round(w*10);i++)assistPool.push(p);});
+  for(let g=0;g<ms;g++){
+    const scorer=goalPool[Math.floor(Math.random()*goalPool.length)];
+    if(scorer)G.playerStats[scorer.n].goals++;
+    if(assistPool.length>0&&Math.random()<0.78){
+      let a=assistPool[Math.floor(Math.random()*assistPool.length)];
+      if(a&&a!==scorer)G.playerStats[a.n].assists++;
+    }
+  }
+}
+
+function simAll(){
+  document.getElementById('simBtn').disabled=true;
+  let idx=0;
+  const usRow=G._table.find(t=>t.isUs);
+  const go=()=>{
+    if(idx>=G._games||!G._opps[idx]){showResult();return;}
+    const opp=G._opps[idx];
+    const m=simMatch(opp.s);
+    genPlayerStats(m.res,m.ms);
+    G.matches.push({...m,opp:opp.n});
+    if(usRow){
+      usRow.p++;usRow.gf+=m.ms;usRow.ga+=m.os;
+      if(m.res==='w'){usRow.w++;usRow.pts+=3;}
+      else if(m.res==='d'){usRow.d++;usRow.pts++;}
+      else usRow.l++;
+    }
+    const dot=document.getElementById('sd'+idx);
+    if(dot)dot.className='sd '+m.res;
+    const w=G.matches.filter(x=>x.res==='w').length;
+    const d=G.matches.filter(x=>x.res==='d').length;
+    const l=G.matches.filter(x=>x.res==='l').length;
+    document.getElementById('liveRec').textContent=`${w}W ${d}D ${l}L — ${w*3+d} pts`;
+    const ml=document.getElementById('matchList');
+    const row=document.createElement('div');
+    row.className=`mr ${m.res}`;
+    row.innerHTML=`<span class="mopp">${opp.n}</span><span class="msc ${m.res}">${m.ms}–${m.os}</span><span class="mbadge ${m.res}">${m.res.toUpperCase()}</span>`;
+    ml.appendChild(row);ml.scrollTop=ml.scrollHeight;
+    idx++;setTimeout(go,45);
+  };
+  go();
+}
+
+// ── RESULT ─────────────────────────────────────────────────────────────────
+function showResult(){
+  G.phase='result';
+  const w=G.matches.filter(x=>x.res==='w').length;
+  const d=G.matches.filter(x=>x.res==='d').length;
+  const l=G.matches.filter(x=>x.res==='l').length;
+  const pts=w*3+d;
+  const gf=G.matches.reduce((a,m)=>a+m.ms,0);
+  const ga=G.matches.reduce((a,m)=>a+m.os,0);
+  const gd=gf-ga;
+  renderPitch(G.band,-1,false);
+  showPanel('resultPanel');
+
+  document.getElementById('finalRec').textContent=`${w}–${d}–${l}`;
+  document.getElementById('sPts').textContent=pts;
+  document.getElementById('sGD').textContent=(gd>=0?'+':'')+gd;
+  const pl=G.band.filter(Boolean);
+  document.getElementById('sAvgPot').textContent=Math.round(pl.reduce((a,p)=>a+p.pot,0)/pl.length);
+  document.getElementById('sAvgReal').textContent=Math.round(pl.reduce((a,p)=>a+p.real,0)/pl.length);
+
+  const lg=LEAGUES[G.league];
+  const n=lg.teams.length;
+  const TIERS=[
+    {min:Math.round(n*2.3),lbl:'Champions',cls:'t5',txt:'Against every prediction, they delivered. The scouts were right all along.'},
+    {min:Math.round(n*1.7),lbl:'UCL qualification',cls:'t4',txt:"Top four. The potential wasn't entirely wrong. Some of them made it."},
+    {min:Math.round(n*1.3),lbl:'Mid-table',cls:'t3',txt:'Survived. Not what the FM database promised, but they did their jobs.'},
+    {min:Math.round(n*0.95),lbl:'Relegation battle',cls:'t2',txt:'Every game felt like a crisis. The gap between potential and reality was brutal.'},
+    {min:0,lbl:'Relegated',cls:'t1',txt:'You built your season around broken dreams. The save file corrupted. It always does.'}
+  ];
+  const tier=TIERS.find(t=>pts>=t.min)||TIERS[TIERS.length-1];
+  document.getElementById('tierBadge').textContent=G.sm==='wk'?tier.lbl+' (what if)':tier.lbl;
+  document.getElementById('tierBadge').className='tbadge '+tier.cls;
+  document.getElementById('flavourTxt').textContent=G.sm==='wk'?'In the parallel universe where they all delivered…':tier.txt;
+
+  // Player roster with stats (38-0 style list)
+  document.getElementById('teamSub').textContent=`${FM_DEFS[G.fm].name} · avg real ${Math.round(pl.reduce((a,p)=>a+p.real,0)/pl.length)}`;
+  renderRoster('resultRoster',{stats:true});
+
+  // League table
+  document.getElementById('leagueTableLbl').textContent=lg.name+' — Final Table';
+  const sorted=[...G._table].sort((a,b)=>b.pts-a.pts||(b.gf-b.ga)-(a.gf-a.ga)||b.gf-a.gf);
+  document.getElementById('leagueBody').innerHTML=sorted.map((t,i)=>{
+    const pos=i+1;
+    const gd=t.gf-t.ga;
+    let zc='';
+    if(pos<=lg.ucl)zc='ucl';
+    else if(pos<=lg.uel)zc='uel';
+    else if(pos>lg.rel)zc='rel';
+    return `<tr class="${t.isUs?'us':''}">
+      <td class="${zc}" style="color:${t.isUs?'#3db866':'#444'}">${pos}</td>
+      <td style="font-weight:${t.isUs?600:400}">${t.n}</td>
+      <td class="r">${t.w}</td><td class="r">${t.d}</td><td class="r">${t.l}</td>
+      <td class="r">${gd>=0?'+':''}${gd}</td>
+      <td class="r" style="font-weight:${t.isUs?700:400};color:${t.isUs?'#3db866':'#999'}">${t.pts}</td>
+    </tr>`;
+  }).join('');
+
+  // ── Overdelivery score ──
+  // Expected points calibrated to the actual sim: a balanced squad rated R earns
+  // ~3.46*R - 196 points over a season. Overdelivery = how far you beat that.
+  const avgReal=pl.reduce((a,p)=>a+p.real,0)/pl.length;
+  // Calibrated on a 38-game season; scale to the actual season length for fairness across leagues
+  const gamesFactor=(G._games||38)/38;
+  const expectedPts=Math.round(Math.max(0,Math.min(114,(3.46*avgReal-195.8)*gamesFactor)));
+  const overdelivery=pts-expectedPts;
+  G._lastResult={pts,w,d,l,gd,avgReal:Math.round(avgReal),overdelivery,tier:tier.lbl,daily:G.daily,seed:G.seed};
+  document.getElementById('odScore').textContent=(overdelivery>=0?'+':'')+overdelivery;
+  document.getElementById('odScore').style.color=overdelivery>=0?'#3db866':'#d94a4a';
+  document.getElementById('odExplain').textContent=`${pts} points — a squad rated ${Math.round(avgReal)} would be expected to get about ${expectedPts}. ${overdelivery>=8?'You massively overperformed.':overdelivery>=0?'You beat expectations.':'Fell short of the talent on paper.'}`;
+  document.getElementById('submitScoreBtn').textContent='Submit to leaderboard';
+  document.getElementById('submitScoreBtn').disabled=!document.getElementById('playerNameInput').value.trim();
+
+  const names=pl.map((p,i)=>`${G.slots[i]?.pos}: ${shortName(p.n)}`).join(', ');
+  G._shareText=`What Could Have Been ${G.daily?'★ Daily '+dateStr():''}\n${lg.name} — ${w}W ${d}D ${l}L, ${pts}pts (${tier.lbl})\nOverdelivery: ${overdelivery>=0?'+':''}${overdelivery} | Squad rating ${Math.round(avgReal)}\n${names}`;
+  document.getElementById('shareBox').textContent=G._shareText;
+  showLB(G.daily?'daily':'all');
+}
+
+// ── LEADERBOARD (artifact storage — ports to Supabase later) ──
+async function submitScore(){
+  if(!G._lastResult)return;
+  const name=(document.getElementById('playerNameInput').value||'Anonymous').trim().substring(0,16);
+  const btn=document.getElementById('submitScoreBtn');
+  btn.disabled=true;btn.textContent='Submitting…';
+  const entry={
+    name,
+    score:G._lastResult.overdelivery,
+    pts:G._lastResult.pts,
+    rating:G._lastResult.avgReal,
+    tier:G._lastResult.tier,
+    daily:G._lastResult.daily,
+    seed:G._lastResult.seed,
+    ts:Date.now()
+  };
+  try{
+    const key=G._lastResult.daily?`lb:daily:${G._lastResult.seed}:${name}:${Date.now()}`:`lb:all:${name}:${Date.now()}`;
+    if(window.storage){
+      await window.storage.set(key,JSON.stringify(entry),true);
+      btn.textContent='Submitted ✓';
+    } else {
+      // localStorage fallback for local testing / Netlify (pre-Supabase)
+      const lsKey='wcb_scores';
+      const all=JSON.parse(localStorage.getItem(lsKey)||'[]');
+      all.push(entry);
+      localStorage.setItem(lsKey,JSON.stringify(all));
+      btn.textContent='Saved locally ✓';
+    }
+    setTimeout(()=>showLB(G._lastResult.daily?'daily':'all'),300);
+  }catch(e){
+    btn.textContent='Error — try again';btn.disabled=false;
+  }
+}
+
+async function loadScores(){
+  // Returns array of entries from storage or localStorage
+  try{
+    if(window.storage){
+      const res=await window.storage.list('lb:',true);
+      if(!res||!res.keys)return [];
+      const entries=[];
+      for(const k of res.keys){
+        try{const v=await window.storage.get(k,true);if(v&&v.value)entries.push(JSON.parse(v.value));}catch(e){}
+      }
+      return entries;
+    } else {
+      return JSON.parse(localStorage.getItem('wcb_scores')||'[]');
+    }
+  }catch(e){return [];}
+}
+
+async function showLB(mode){
+  document.getElementById('lb-daily').className='seg-btn'+(mode==='daily'?' on':'');
+  document.getElementById('lb-all').className='seg-btn'+(mode==='all'?' on':'');
+  document.getElementById('lbTitle').textContent=mode==='daily'?`Today's Leaderboard — ${dateStr()}`:'All-time Leaderboard';
+  const body=document.getElementById('lbBody');
+  body.innerHTML='<tr><td colspan="5" style="color:#888;text-align:center;padding:12px">Loading…</td></tr>';
+  let entries=await loadScores();
+  if(mode==='daily'){
+    const seed=todaySeed();
+    entries=entries.filter(e=>e.daily&&e.seed===seed);
+  }
+  entries.sort((a,b)=>b.score-a.score);
+  entries=entries.slice(0,15);
+  if(entries.length===0){
+    body.innerHTML='<tr><td colspan="5" style="color:#888;text-align:center;padding:12px">No scores yet — be the first!</td></tr>';
+    return;
+  }
+  body.innerHTML=entries.map((e,i)=>`<tr><td style="color:#888">${i+1}</td><td>${e.name}</td><td class="r">${e.rating}</td><td class="r">${e.pts}</td><td class="r" style="color:#e8a000;font-weight:700">${e.score>=0?'+':''}${e.score}</td></tr>`).join('');
+}
+
+function copyShare(){
+  if(!G._shareText)return;
+  navigator.clipboard.writeText(G._shareText).then(()=>{
+    const b=event.target;const t=b.textContent;b.textContent='Copied ✓';setTimeout(()=>b.textContent=t,1500);
+  });
+}
+
+// ── Generate shareable image card ──
+function shareImage(){
+  const r=G._lastResult;
+  if(!r)return;
+  const pl=G.band.filter(Boolean);
+  const W=600,H=800;
+  const cv=document.createElement('canvas');
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  // BG
+  ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,W,H);
+  // Header
+  ctx.fillStyle='#fff';ctx.font='bold 30px -apple-system,sans-serif';ctx.textAlign='left';
+  ctx.fillText('What Could Have Been',32,52);
+  ctx.fillStyle=G.daily?'#e8a000':'#777';ctx.font='14px -apple-system,sans-serif';
+  ctx.fillText(G.daily?('★ Daily Challenge · '+dateStr()):('Free Play · '+LEAGUES[G.league].name),32,78);
+  // Pitch
+  const px=32,py=100,pw=W-64,ph=300;
+  const grad=ctx.createLinearGradient(0,py,0,py+ph);
+  grad.addColorStop(0,'#163d08');grad.addColorStop(.5,'#1e5510');grad.addColorStop(1,'#163d08');
+  ctx.fillStyle=grad;ctx.fillRect(px,py,pw,ph);
+  ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;ctx.strokeRect(px+8,py+6,pw-16,ph-12);
+  ctx.beginPath();ctx.moveTo(px+8,py+ph/2);ctx.lineTo(px+pw-8,py+ph/2);ctx.stroke();
+  ctx.beginPath();ctx.arc(px+pw/2,py+ph/2,32,0,7);ctx.stroke();
+  // Players as dots
+  const slots=FM_DEFS[G.fm].slots;
+  pl.forEach((p,i)=>{
+    const sl=slots[i];if(!sl)return;
+    const x=px+(sl.x/100)*pw;
+    const y=py+(sl.y/100)*ph;
+    const gap=p.pot-p.real;
+    ctx.fillStyle=p.fm===0?'#5a3500':(gap<=5?'#0a3d6e':gap<=20?'#5a3500':'#5a1515');
+    ctx.strokeStyle=p.fm===0?'#e8a000':(gap<=5?'#4a90d9':gap<=20?'#c87a00':'#d94a4a');
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(x,y,13,0,7);ctx.fill();ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='bold 11px -apple-system,sans-serif';ctx.textAlign='center';
+    ctx.fillText(shortName(p.n).substring(0,9),x,y+26);
+  });
+  // Score block
+  let yy=py+ph+50;
+  ctx.textAlign='left';
+  ctx.fillStyle='#fff';ctx.font='bold 52px -apple-system,sans-serif';
+  ctx.fillText(`${r.w}-${r.d}-${r.l}`,32,yy);
+  ctx.fillStyle='#3db866';ctx.font='bold 20px -apple-system,sans-serif';
+  ctx.fillText(r.tier,32,yy+30);
+  // Overdelivery — the hero number
+  ctx.textAlign='right';
+  ctx.fillStyle=r.overdelivery>=0?'#3db866':'#d94a4a';
+  ctx.font='bold 64px -apple-system,sans-serif';
+  ctx.fillText((r.overdelivery>=0?'+':'')+r.overdelivery,W-32,yy+10);
+  ctx.fillStyle='#888';ctx.font='14px -apple-system,sans-serif';
+  ctx.fillText('OVERDELIVERY SCORE',W-32,yy+34);
+  // Stats row
+  yy+=85;
+  ctx.textAlign='left';
+  const stats=[['POINTS',r.pts],['GD',(r.gd>=0?'+':'')+r.gd],['SQUAD',r.avgReal]];
+  stats.forEach((s,i)=>{
+    const sx=32+i*((pw)/3);
+    ctx.fillStyle='#fff';ctx.font='bold 28px -apple-system,sans-serif';
+    ctx.fillText(s[1],sx,yy);
+    ctx.fillStyle='#777';ctx.font='12px -apple-system,sans-serif';
+    ctx.fillText(s[0],sx,yy+20);
+  });
+  // Footer
+  ctx.fillStyle='#444';ctx.font='13px -apple-system,sans-serif';ctx.textAlign='center';
+  ctx.fillText('whatcouldhavebeen · draft your wonderkid XI',W/2,H-24);
+
+  // Download
+  cv.toBlob(blob=>{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=`wonderkid-${G.daily?'daily-'+r.seed:'result'}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+function fullResetToLanding(){
+  if(G.phase==='draft'||G.phase==='season'){
+    if(!confirm('Abandon current game and return home?'))return;
+  }
+  reset();
+  document.getElementById('landing').classList.remove('hidden');
+}
+
+// ── Legal modals ──
+function openModal(id){document.getElementById(id).classList.remove('hidden');}
+function closeModal(id){document.getElementById(id).classList.add('hidden');}
+
+// ── Cookie consent + consent-gated analytics ──
+// Swap G-XXXXXXXXXX for your Google Analytics 4 Measurement ID (or replace
+// loadAnalytics with your Plausible snippet). Analytics ONLY loads on consent.
+const GA_ID='G-XXXXXXXXXX';
+function loadAnalytics(){
+  if(window._gaLoaded)return;
+  if(!GA_ID||GA_ID.indexOf('XXXX')>=0)return; // not configured yet
+  window._gaLoaded=true;
+  const s=document.createElement('script');
+  s.async=true;s.src='https://www.googletagmanager.com/gtag/js?id='+GA_ID;
+  document.head.appendChild(s);
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  window.gtag=gtag;
+  gtag('js',new Date());
+  gtag('config',GA_ID,{anonymize_ip:true});
+}
+function cookieChoice(accept){
+  try{localStorage.setItem('wcb_consent',accept?'granted':'denied');}catch(e){}
+  document.getElementById('cookieBanner').classList.add('hidden');
+  if(accept)loadAnalytics();
+}
+function openCookieSettings(){
+  document.getElementById('cookieBanner').classList.remove('hidden');
+}
+function initConsent(){
+  let c=null;
+  try{c=localStorage.getItem('wcb_consent');}catch(e){}
+  if(c==='granted'){loadAnalytics();}
+  else if(c==='denied'){/* respect decline */}
+  else{document.getElementById('cookieBanner').classList.remove('hidden');}
+}
+initConsent();
+
+function enterGame(mode){
+  if(!WK||WK.length===0){
+    // Data not loaded yet — wait and retry
+    const btns=document.querySelectorAll('.land-btn');
+    btns.forEach(b=>{b.textContent='Loading…';b.disabled=true;});
+    G._pendingMode=mode;
+    return;
+  }
+  document.getElementById('landing').classList.add('hidden');
+  if(mode==='daily')startDaily();
+  // 'free' reveals the setup screen beneath
+}
+function showLanding(){
+  document.getElementById('landing').classList.remove('hidden');
+  reset();
+}
+function fullReset(){
+  if(G.phase==='draft'||G.phase==='season'){
+    if(!confirm('Abandon current game and return to setup?'))return;
+  }
+  reset();
+}
+function reset(){
+  G={fm:G.fm,league:G.league,gm:G.gm,sm:G.sm,dm:'spin',respinsMax:G.respinsMax||3,respinsUsed:0,showNums:true,slots:[],band:[],opts:[],sel:null,matches:[],phase:'setup',activePosIdx:null,selB:null,spinSlotIdx:null,playerStats:{},daily:false,seed:0,hideRatings:G.hideRatings,budget:{gold:4,silver:4,bronze:3}};
+  document.getElementById('numsToggle').style.display='none';
+  document.getElementById('dailyBanner').classList.add('hidden');
+  showPanel('setupPanel');
+  setFm();updateDesc();
+}
+</script>
+</body>
+</html>
