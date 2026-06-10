@@ -281,9 +281,20 @@ select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;ba
   #app{height:auto;min-height:100vh;padding:8px 10px;gap:8px}
   #main{flex-direction:column;flex:none;min-height:0;gap:10px}
 
-  /* Pitch on top, smaller, full width */
+  /* Pitch on top, smaller, full width.
+     On desktop the pitch gets its height from a tall flex column; on mobile that
+     column has no fixed height, so we must give the wrapper an explicit height or
+     the absolutely-positioned SVG collapses to zero. Use the 100:152 viewBox ratio. */
   #pitchCol{flex:none;width:100%}
-  #pitchWrap{max-width:420px;margin:0 auto;width:100%}
+  #pitchWrap{
+    flex:none;
+    width:100%;
+    max-width:300px;
+    margin:0 auto;
+    height:440px;                /* fallback for browsers without aspect-ratio */
+    aspect-ratio:100/152;        /* modern browsers: height derived from width */
+    min-height:0;
+  }
 
   /* Topbar wraps and shrinks */
   #topbar{flex-wrap:wrap;gap:6px}
