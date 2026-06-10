@@ -879,7 +879,15 @@ function doSpin(){
 }
 
 function buildSpinCands(yr,slotIdx){
-  const cands=getCands(G.slots[slotIdx].pos,yr);
+  let cands=getCands(G.slots[slotIdx].pos,yr);
+  // Safety net: a Legends spin with no keeper/position legends falls back to a year
+  if(yr==='LEGENDS'&&cands.length===0){
+    const yrs=SPIN_POOL.filter(x=>x!=='LEGENDS');
+    const fallbackYr=yrs[Math.floor(Math.random()*yrs.length)];
+    document.getElementById('spinYear').textContent='FM '+fallbackYr;
+    document.getElementById('spinSub').textContent='no legends for this position — '+fallbackYr;
+    cands=getCands(G.slots[slotIdx].pos,fallbackYr);
+  }
   G.opts=cands;G.sel=null;
   document.getElementById('picksWrap').classList.remove('hidden');
   document.getElementById('revealSection').classList.add('hidden');
@@ -895,19 +903,11 @@ function getCands(slotPos,yr){
   let pool=WK.filter(p=>valid.some(v=>p.pos.includes(v))&&!draftedSet.has(canonName(p.n)));
   // LEGENDS mode: only cult heroes (fm=0)
   if(yr==='LEGENDS'){
-    // ALL undrafted cult heroes
-    const allLegends=WK.filter(p=>p.fm===0&&!draftedSet.has(canonName(p.n)));
-    // Position-matched legends first
-    let exact=allLegends.filter(p=>valid.some(v=>p.pos.includes(v)));
-    let cands;
-    if(exact.length>=8){
-      cands=exact.sort(()=>srand()-.5).slice(0,8);
-    } else {
-      // Top up with the most iconic legends from any position (by potential) — never modern players
-      const extra=allLegends.filter(p=>!exact.includes(p)).sort((a,b)=>b.pot-a.pot);
-      cands=[...exact,...extra].slice(0,8);
-    }
-    return cands.sort((a,b)=>b.pot-a.pot);
+    // Only cult heroes who can play THIS position — never pad with off-position
+    // legends (a striker legend must never be draftable into the GK slot).
+    const legends=WK.filter(p=>p.fm===0&&!draftedSet.has(canonName(p.n))&&valid.some(v=>p.pos.includes(v)));
+    // Show up to 8, highest potential first. Fewer is fine — it's a bonus pool.
+    return legends.sort(()=>srand()-.5).sort((a,b)=>b.pot-a.pot).slice(0,8);
   }
   // Normal years exclude legends (fm=0)
   pool=pool.filter(p=>p.fm!==0);
@@ -1011,8 +1011,11 @@ function doDraft(){
 
 function showReveal(p,secId,boxId){
   const gap=p.pot-p.real;
-  const cls=gap<=0?'g':gap<=20?'o':'b';
-  const gapTxt=gap<=0?`+${Math.abs(gap)} overdelivered`:`−${gap} gap`;
+  const cls=gap<0?'g':gap===0?'g':gap<=20?'o':'b';
+  let gapTxt;
+  if(gap<0)gapTxt=`+${Math.abs(gap)} exceeded potential`;
+  else if(gap===0)gapTxt='met potential exactly';
+  else gapTxt=`−${gap} short of potential`;
   const hasFate=p.fate&&p.fate.length>20;
   document.getElementById(boxId).innerHTML=`
     <div class="rev-row">
