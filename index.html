@@ -75,7 +75,9 @@ select{font-size:13px;padding:6px 9px;border-radius:6px;border:1px solid #333;ba
 .pn{font-size:13px;font-weight:600;color:#fff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pm{font-size:11px;color:#aaa;margin-top:2px}
 .ph{font-size:11px;color:#bbb;margin-top:2px;font-style:italic;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.ptag{font-size:8px;background:#181818;color:#444;padding:1px 4px;border-radius:3px;margin-left:2px;vertical-align:1px}
+.ptag{font-size:9px;background:#222;color:#aaa;padding:1px 5px;border-radius:3px;margin-left:3px;vertical-align:1px;font-weight:600;letter-spacing:.3px}
+.ptag.natural{background:#15401f;color:#5dd48a}
+.ptag.oop{background:#3a2a00;color:#e8a000}
 
 /* REVEAL */
 .reveal{padding:8px 10px;border-radius:7px;border:1px solid #1e1e1e;background:#0a0a0a;margin-top:5px}
@@ -1051,6 +1053,24 @@ function getCands(slotPos,yr){
   return result;
 }
 
+function posTags(p){
+  // Show every position the player can play. Highlight whether they're a
+  // natural fit for the slot currently being drafted, or being played out of position.
+  const slot = G.spinSlotIdx!=null ? G.slots[G.spinSlotIdx].pos : null;
+  const valid = slot ? (POS_MAP[slot]||[slot]) : [];
+  const naturalForSlot = slot ? p.pos.includes(slot) : true;  // exact match = natural
+  const tags = p.pos.map(pos=>{
+    const isSlot = pos===slot;            // exact natural fit
+    const cls = isSlot ? 'ptag natural' : 'ptag';
+    return `<span class="${cls}">${pos}</span>`;
+  }).join('');
+  // If they can fill the slot but NOT in their natural position, flag it
+  let oop = '';
+  if(slot && !naturalForSlot){
+    oop = `<span class="ptag oop">in ${slot}</span>`;
+  }
+  return tags + oop;
+}
 function renderPickList(listId,cands,selFn){
   const isWk=G.gm==='wk';
   document.getElementById(listId).innerHTML=cands.map((p,i)=>{
@@ -1069,7 +1089,7 @@ function renderPickList(listId,cands,selFn){
     return `<div class="pick${locked?' locked':''}${isLegend?' islegend':''}" id="${listId}_${i}" ${locked?'':`onclick="${selFn}(${i})"`}>
       <div class="pick-num ${cls}">${showNum?v:'?'}</div>
       <div class="pbody">
-        <div class="pn">${nm}<span class="ptag">${p.pos[0]}</span> ${tBadge}</div>
+        <div class="pn">${nm}${posTags(p)} ${tBadge}</div>
         <div class="pm">${p.nat} · ${p.club} · ${eraLabel}</div>
         ${locked?`<div class="lockmsg">${tierLabel(tier)} budget spent</div>`:(hasHype?`<div class="ph">${p.hype}</div>`:'')}
       </div>
